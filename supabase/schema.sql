@@ -253,6 +253,7 @@ create table if not exists public.inseminations (
   diagnosis_due_date date,
   birth_due_date date,
   notes text,
+  cycle_status text check (cycle_status is null or cycle_status in ('active', 'closed')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   deleted_at timestamptz,
@@ -371,6 +372,12 @@ alter table public.farm_settings
   add column if not exists area_total_hectares numeric(12, 2)
     check (area_total_hectares is null or area_total_hectares >= 0),
   add column if not exists app_preferences jsonb not null default '{}'::jsonb;
+
+alter table public.inseminations
+  add column if not exists cycle_status text check (cycle_status in ('active', 'closed'));
+
+alter table public.births
+  add column if not exists is_archived boolean default false;
 
 create unique index if not exists animals_farm_identification_active_key
   on public.animals (farm_id, lower(identification))
