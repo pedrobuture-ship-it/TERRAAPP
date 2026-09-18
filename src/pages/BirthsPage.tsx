@@ -321,7 +321,7 @@ export function BirthsPage() {
           const activeInsemination = allInseminations.find(
             (ins) => ins.animal_id === form.animal_id && ins.cycle_status === 'active'
           );
-          const fatherId = activeInsemination?.bull_id || undefined;
+          const fatherId = activeInsemination?.bull_id || activeInsemination?.semen_id || undefined;
 
           const calvesToCreate = form.calves.filter(c => c.status === 'alive' && c.identification.trim());
           
