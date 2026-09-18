@@ -160,9 +160,7 @@ create table if not exists public.animals (
   constraint animals_lot_same_farm_fk
     foreign key (lot_id, farm_id) references public.lots(id, farm_id),
   constraint animals_mother_same_farm_fk
-    foreign key (mother_id, farm_id) references public.animals(id, farm_id),
-  constraint animals_father_same_farm_fk
-    foreign key (father_id, farm_id) references public.animals(id, farm_id)
+    foreign key (mother_id, farm_id) references public.animals(id, farm_id)
 );
 
 create or replace function public.validate_animal_parent_sex()
@@ -378,6 +376,9 @@ alter table public.inseminations
 
 alter table public.births
   add column if not exists is_archived boolean default false;
+
+alter table public.animals
+  drop constraint if exists animals_father_same_farm_fk;
 
 create unique index if not exists animals_farm_identification_active_key
   on public.animals (farm_id, lower(identification))

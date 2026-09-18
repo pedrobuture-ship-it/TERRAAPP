@@ -254,10 +254,16 @@ function toRemotePayload(
 
   for (const relation of config.relations ?? []) {
     const localRelationId = record[relation.field as keyof AnyLocalEntity] as string | undefined;
-    const remoteRelationId = getRemoteIdForLocal(context, relation.target, localRelationId);
-    const relationExistsLocally = localRelationId
+    let remoteRelationId = getRemoteIdForLocal(context, relation.target, localRelationId);
+    let relationExistsLocally = localRelationId
       ? context.localById[relation.target].has(localRelationId)
       : false;
+
+    // Fix: father_id can be an animal or semen
+    if (config.localName === 'animals' && relation.field === 'father_id' && localRelationId && !remoteRelationId) {
+      remoteRelationId = getRemoteIdForLocal(context, 'semen', localRelationId);
+      relationExistsLocally = context.localById['semen'].has(localRelationId);
+    }
 
     if (relation.required && !remoteRelationId) {
       throw new Error(`Relação obrigatória não sincronizada em ${config.localName}: ${relation.field}.`);
@@ -293,7 +299,14 @@ function toLocalRecord(
 
   for (const relation of config.relations ?? []) {
     const remoteRelationId = remote[relation.field] as string | undefined | null;
-    local[relation.field] = getLocalIdForRemote(context, relation.target, remoteRelationId);
+    let localRelationId = getLocalIdForRemote(context, relation.target, remoteRelationId);
+
+    // Fix: father_id can be an animal or semen
+    if (config.localName === 'animals' && relation.field === 'father_id' && remoteRelationId && !localRelationId) {
+      localRelationId = getLocalIdForRemote(context, 'semen', remoteRelationId);
+    }
+
+    local[relation.field] = localRelationId;
   }
 
   return {
