@@ -197,7 +197,16 @@ begin
       and farm_id = new.farm_id
       and deleted_at is null;
 
-    if parent_sex is distinct from 'male' then
+    if parent_sex is null then
+      if not exists (
+        select 1 from public.semen
+        where id = new.father_id
+          and farm_id = new.farm_id
+          and deleted_at is null
+      ) then
+        raise exception 'O pai informado precisa ser um macho ou sêmen válido.';
+      end if;
+    elsif parent_sex is distinct from 'male' then
       raise exception 'O pai informado precisa ser um macho.';
     end if;
   end if;
