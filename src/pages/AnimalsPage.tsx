@@ -7,11 +7,13 @@ import { AnimalHistoryModal } from '../components/animals/AnimalHistoryModal';
 import { PageShell } from '../components/layout/PageShell';
 import * as animalsService from '../services/animalsService';
 import * as lotsService from '../services/lotsService';
-import type { Animal, Lot } from '../types';
+import * as semenService from '../services/semenService';
+import type { Animal, Lot, Semen } from '../types';
 
 export function AnimalsPage() {
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [lots, setLots] = useState<Lot[]>([]);
+  const [semenList, setSemenList] = useState<Semen[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
@@ -32,12 +34,14 @@ export function AnimalsPage() {
     setLoading(true);
 
     try {
-      const [animalRecords, lotRecords] = await Promise.all([
+      const [animalRecords, lotRecords, semenRecords] = await Promise.all([
         animalsService.list(),
         lotsService.list(),
+        semenService.list(),
       ]);
       setAnimals(animalRecords);
       setLots(lotRecords);
+      setSemenList(semenRecords);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'Não foi possível carregar os animais.');
     } finally {
@@ -256,6 +260,7 @@ export function AnimalsPage() {
           animal={editingAnimal}
           animals={animals}
           lots={lots}
+          semenList={semenList}
           error={formError}
           saving={saving}
           onSubmit={handleSubmit}

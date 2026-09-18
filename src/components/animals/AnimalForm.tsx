@@ -6,7 +6,7 @@ import {
   animalStatusOptions,
   COMMON_BREEDS,
 } from '../../constants/animalOptions';
-import type { Animal, AnimalCategory, AnimalSex, AnimalStatus, Lot } from '../../types';
+import type { Animal, AnimalCategory, AnimalSex, AnimalStatus, Lot, Semen } from '../../types';
 
 export interface AnimalFormPayload {
   identification: string;
@@ -42,6 +42,7 @@ interface AnimalFormProps {
   animal?: Animal | null;
   animals: Animal[];
   lots: Lot[];
+  semenList: Semen[];
   error?: string | null;
   saving?: boolean;
   onSubmit: (payload: AnimalFormPayload) => Promise<void>;
@@ -102,6 +103,7 @@ export function AnimalForm({
   animal,
   animals,
   lots,
+  semenList,
   error,
   saving,
   onSubmit,
@@ -136,6 +138,12 @@ export function AnimalForm({
         .filter((item) => item.id !== animal?.id && item.sex === 'male')
         .sort((a, b) => a.identification.localeCompare(b.identification, 'pt-BR')),
     [animal?.id, animals],
+  );
+
+  const semenOptions = useMemo(
+    () =>
+      semenList.sort((a, b) => a.bull_name.localeCompare(b.bull_name, 'pt-BR')),
+    [semenList],
   );
 
   function updateField<K extends keyof AnimalFormState>(field: K, value: AnimalFormState[K]) {
@@ -397,24 +405,39 @@ export function AnimalForm({
           </select>
         </label>
 
-        <label className="block">
-          <span className="text-sm font-medium text-slate-700">Pai</span>
-          <select
-            value={form.father_id}
-            onChange={(event) => updateField('father_id', event.target.value)}
-            className="mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
-          >
-            <option value="">Não informado</option>
-            {fatherOptions.map((option) => (
-              <option key={option.id} value={option.id}>
-                {animalOptionLabel(option)}
-              </option>
-            ))}
-            {form.father_id && !fatherOptions.some((option) => option.id === form.father_id) ? (
-              <option value={form.father_id}>{form.father_id}</option>
-            ) : null}
-          </select>
-        </label>
+          <label className="block">
+            <span className="text-sm font-medium text-slate-700">Pai</span>
+            <select
+              value={form.father_id}
+              onChange={(event) => updateField('father_id', event.target.value)}
+              className="mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
+            >
+              <option value="">Não informado</option>
+              {fatherOptions.length > 0 && (
+                <optgroup label="Touros">
+                  {fatherOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {animalOptionLabel(option)}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              {semenOptions.length > 0 && (
+                <optgroup label="Sêmen (Inseminação)">
+                  {semenOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.bull_name} {option.code ? `(${option.code})` : ''}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              {form.father_id &&
+              !fatherOptions.some((option) => option.id === form.father_id) &&
+              !semenOptions.some((option) => option.id === form.father_id) ? (
+                <option value={form.father_id}>{form.father_id}</option>
+              ) : null}
+            </select>
+          </label>
 
         <label className="block sm:col-span-2">
           <span className="text-sm font-medium text-slate-700">Observações</span>

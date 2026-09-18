@@ -55,12 +55,15 @@ async function ensureParentReferences(record: Animal) {
   if (record.father_id) {
     const father = activeAnimals.find((animal) => animal.id === record.father_id);
 
-    if (!father) {
-      throw new Error('O pai informado não foi encontrado.');
-    }
-
-    if (father.sex !== 'male') {
-      throw new Error('O pai informado precisa ser um macho.');
+    if (father) {
+      if (father.sex !== 'male') {
+        throw new Error('O pai informado precisa ser um macho.');
+      }
+    } else {
+      const semen = await db.semen.get(record.father_id);
+      if (!semen || semen.deleted_at) {
+        throw new Error('O pai informado não foi encontrado.');
+      }
     }
   }
 
