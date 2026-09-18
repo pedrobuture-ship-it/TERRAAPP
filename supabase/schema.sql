@@ -728,7 +728,7 @@ returns boolean
 language plpgsql
 security definer
 set search_path = public
-as $function
+as $$
 declare
   found_user_id uuid;
 begin
@@ -748,7 +748,7 @@ begin
 
   return true;
 end;
-$function;
+$$;
 
 create or replace function public.get_farm_members_with_email(target_farm_id uuid)
 returns table (
@@ -762,7 +762,7 @@ returns table (
 language plpgsql
 security definer
 set search_path = public
-as $function
+as $$
 begin
   if not public.is_farm_member(target_farm_id) then
     raise exception 'Não autorizado.';
@@ -776,7 +776,7 @@ begin
   where fm.farm_id = target_farm_id and fm.deleted_at is null
   order by fm.created_at asc;
 end;
-$function;
+$$;
 grant execute on function public.invite_user_to_farm(uuid, text, text) to authenticated;
 grant execute on function public.get_farm_members_with_email(uuid) to authenticated;
 
