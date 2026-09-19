@@ -27,6 +27,10 @@ import { ReportsPage } from '../pages/ReportsPage';
 import { SettingsPage } from '../pages/SettingsPage';
 import { GenealogyPage } from '../pages/GenealogyPage';
 
+import { TasksKanbanPage } from '../pages/TasksKanbanPage';
+import { KanbanSquare } from 'lucide-react';
+
+
 export const appRoutes: AppRouteDefinition[] = [
   {
     id: 'dashboard',
@@ -123,5 +127,13 @@ export const appRoutes: AppRouteDefinition[] = [
     shortLabel: 'Backup',
     icon: DatabaseBackup,
     Component: BackupPage,
+  },
+  {
+    id: 'tarefas',
+    path: '/tarefas',
+    label: 'Tarefas (Kanban)',
+    shortLabel: 'Tarefas',
+    icon: KanbanSquare,
+    Component: TasksKanbanPage,
   },
 ];

@@ -15,7 +15,8 @@ export type AppRouteId =
   | 'relatorios'
   | 'genealogia'
   | 'configuracoes'
-  | 'backup';
+  | 'backup'
+  | 'tarefas';
 
 export interface AppRouteDefinition {
   id: AppRouteId;
