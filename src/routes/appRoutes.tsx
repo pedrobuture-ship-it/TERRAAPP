@@ -37,6 +37,14 @@ export const appRoutes: AppRouteDefinition[] = [
     Component: DashboardPage,
   },
   {
+    id: 'genealogia',
+    path: '/genealogy',
+    label: 'Genealogia & Acasalamento',
+    shortLabel: 'Gen.',
+    icon: GitFork,
+    Component: GenealogyPage,
+  },
+  {
     id: 'animais',
     path: '/animais',
     label: 'Animais',
@@ -99,14 +107,6 @@ export const appRoutes: AppRouteDefinition[] = [
     shortLabel: 'Relatórios',
     icon: BarChart3,
     Component: ReportsPage,
-  },
-  {
-    id: 'genealogia',
-    path: '/genealogy',
-    label: 'Genealogia & Acasalamento',
-    shortLabel: 'Gen.',
-    icon: GitFork,
-    Component: GenealogyPage,
   },
   {
     id: 'configuracoes',

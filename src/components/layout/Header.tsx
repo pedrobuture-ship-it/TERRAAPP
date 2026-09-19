@@ -29,15 +29,7 @@ export function Header({ title }: HeaderProps) {
     }
   }
 
-  async function forceUpdate() {
-    if ('serviceWorker' in navigator) {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      for (const registration of registrations) {
-        await registration.unregister();
-      }
-    }
-    window.location.reload();
-  }
+  
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur md:px-6">
@@ -56,14 +48,6 @@ export function Header({ title }: HeaderProps) {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <button
-            onClick={forceUpdate}
-            className="hidden items-center gap-2 rounded-full border border-red-200 bg-red-100 px-3 py-2 text-sm font-medium text-red-700 sm:inline-flex hover:bg-red-200"
-          >
-            <RefreshCw size={16} aria-hidden="true" />
-            FORÇAR ATUALIZAÇÃO
-          </button>
-          
           <span className="hidden items-center gap-2 rounded-full border border-field-100 bg-field-50 px-3 py-2 text-sm font-medium text-field-700 sm:inline-flex">
             <WifiOff size={16} aria-hidden="true" />
             {isOnline ? 'Offline-first' : 'Sem internet'}

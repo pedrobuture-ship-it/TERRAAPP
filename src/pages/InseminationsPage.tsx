@@ -310,10 +310,6 @@ export function InseminationsPage() {
     >
       <div className="flex flex-wrap gap-3">
         <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 shadow-sm">
-          <span className="text-xs font-medium text-slate-500">Inseminações:</span>
-          <span className="text-sm font-semibold text-slate-950">{inseminations.length}</span>
-        </div>
-        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 shadow-sm">
           <span className="text-xs font-medium text-slate-500">Aguardando diagnóstico:</span>
           <span className="text-sm font-semibold text-field-700">{inseminations.filter((item) => (item.status ?? 'awaiting_diagnosis') === 'awaiting_diagnosis').length}</span>
         </div>

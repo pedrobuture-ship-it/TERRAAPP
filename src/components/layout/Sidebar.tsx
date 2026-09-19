@@ -9,7 +9,6 @@ export function Sidebar() {
         <img src="/icons/icon.svg" alt="" className="h-11 w-11 rounded-2xl" />
         <div>
           <p className="text-base font-semibold text-slate-950">TERRA</p>
-          <p className="text-sm text-slate-500">Gestão de cria</p>
         </div>
       </div>
 
