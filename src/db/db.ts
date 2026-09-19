@@ -8,6 +8,7 @@ import type {
   SanitaryManagement,
   Semen,
   SyncQueueItem,
+  Task,
 } from '../types';
 
 export class TerraDatabase extends Dexie {
@@ -18,6 +19,7 @@ export class TerraDatabase extends Dexie {
   sanitaryManagement!: Table<SanitaryManagement, string>;
   lots!: Table<Lot, string>;
   farmSettings!: Table<FarmSettings, string>;
+  tasks!: Table<Task, string>;
   syncQueue!: Table<SyncQueueItem, string>;
 
   constructor() {

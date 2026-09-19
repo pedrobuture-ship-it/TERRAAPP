@@ -89,6 +89,13 @@ const LAST_SYNC_KEY = 'fazenda-cria:last-sync-at';
 
 const syncTables: Array<SyncTableConfig<AnyLocalEntity>> = [
   {
+    localName: 'tasks',
+    remoteName: 'tasks',
+    idPrefix: 'task',
+    table: db.tasks as any,
+  },
+
+  {
     localName: 'lots',
     remoteName: 'lots',
     idPrefix: 'lot',
@@ -181,6 +188,7 @@ function makeEmptyEntityMap<T>() {
     sanitaryManagement: new Map<string, T>(),
     lots: new Map<string, T>(),
     farmSettings: new Map<string, T>(),
+    tasks: new Map<string, T>(),
   };
 }
 

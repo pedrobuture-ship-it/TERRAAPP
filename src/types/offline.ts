@@ -156,6 +156,25 @@ export interface FarmAppPreferences {
   sanitary_alert_days?: number;
 }
 
+export interface Task extends LocalEntity {
+  farm_id?: string;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  assigned_to?: string;
+}
+
+export type AnyLocalEntity =
+  | Animal
+  | Insemination
+  | Birth
+  | Semen
+  | SanitaryManagement
+  | Lot
+  | FarmSettings
+  | Task;
+
 export type SyncOperation = 'create' | 'update' | 'delete';
 
 export type SyncQueueEntityName =
@@ -165,7 +184,8 @@ export type SyncQueueEntityName =
   | 'semen'
   | 'sanitaryManagement'
   | 'lots'
-  | 'farmSettings';
+  | 'farmSettings'
+  | 'tasks';
 
 export interface SyncQueueItem extends LocalEntity {
   entity: SyncQueueEntityName;
@@ -176,7 +196,8 @@ export interface SyncQueueItem extends LocalEntity {
   last_error?: string;
 }
 
-export type LocalTableName = SyncQueueEntityName | 'syncQueue';
+export type LocalTableName = SyncQueueEntityName | 'syncQueue'
+  | 'tasks';
 
 export interface OfflineBackupData {
   animals: Animal[];
@@ -187,6 +208,7 @@ export interface OfflineBackupData {
   lots: Lot[];
   farmSettings: FarmSettings[];
   syncQueue: SyncQueueItem[];
+  tasks: Task[];
 }
 
 export interface OfflineBackup {

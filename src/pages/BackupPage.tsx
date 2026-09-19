@@ -22,10 +22,11 @@ const tableLabels: Record<LocalTableName, string> = {
   inseminations: 'Inseminações',
   births: 'Partos',
   semen: 'Sêmen',
-  sanitaryManagement: 'Manejo sanitário',
-  lots: 'Lotes',
+  sanitaryManagement: 'Manejo Sanitário',
+  lots: 'Lotes/Piquetes',
   farmSettings: 'Configurações',
-  syncQueue: 'Fila de sincronização',
+  syncQueue: 'Fila de Sincronização',
+  tasks: 'Tarefas',
 };
 
 function readLastBackupAt() {

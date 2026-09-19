@@ -14,6 +14,7 @@ const tableNames: LocalTableName[] = [
   'lots',
   'farmSettings',
   'syncQueue',
+  'tasks',
 ];
 
 function assertBackupShape(value: unknown): asserts value is OfflineBackup {
@@ -46,6 +47,7 @@ export async function exportLocalDatabase(): Promise<OfflineBackup> {
       lots: await db.lots.toArray(),
       farmSettings: await db.farmSettings.toArray(),
       syncQueue: await db.syncQueue.toArray(),
+      tasks: await db.tasks.toArray(),
     };
 
     return {
