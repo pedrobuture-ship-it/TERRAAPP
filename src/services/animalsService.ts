@@ -1,4 +1,5 @@
 import { db } from '../db';
+import { getActiveFarmId } from './farmContextService';
 import type { Animal } from '../types';
 import {
   assertOptionalDate,
@@ -15,7 +16,7 @@ export type UpdateAnimalInput = EntityUpdateInput<Animal>;
 
 async function ensureUniqueIdentification(identification: string, currentId: string) {
   const normalizedIdentification = normalizeIdentifier(identification);
-  const activeFarmId = require('./farmContextService').getActiveFarmId();
+  const activeFarmId = getActiveFarmId();
   const animals = (await db.animals.toArray()).filter(a => !a.farm_id || a.farm_id === activeFarmId);
   const duplicated = animals.some(
     (animal) =>
@@ -30,7 +31,7 @@ async function ensureUniqueIdentification(identification: string, currentId: str
 }
 
 async function ensureParentReferences(record: Animal) {
-  const activeFarmId = require('./farmContextService').getActiveFarmId();
+  const activeFarmId = getActiveFarmId();
   const animals = (await db.animals.toArray()).filter(a => !a.farm_id || a.farm_id === activeFarmId);
   const activeAnimals = animals.filter((animal) => !animal.deleted_at);
 
