@@ -48,9 +48,9 @@ export class TerraDatabase extends Dexie {
       inseminations: '&id, animal_id, semen_id, bull_id, remote_id, farm_id, sync_status, date, updated_at, deleted_at',
     });
 
-    this.version(3).stores({
-      pregnancyDiagnoses: null, // Drop table
-    });
+    this.version(3).stores({ pregnancyDiagnoses: null });
+
+    this.version(4).stores({ tasks: '&id, remote_id, farm_id, sync_status, status, assigned_to, updated_at, deleted_at' });
   }
 }
 
