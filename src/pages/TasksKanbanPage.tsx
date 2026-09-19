@@ -3,8 +3,8 @@ import { PageShell } from '../components/layout/PageShell';
 import { KanbanBoard } from '../components/kanban/KanbanBoard';
 import { tasksService } from '../services/tasksService';
 import type { Task } from '../types';
-import { RefreshCw, Plus } from 'lucide-react';
-import { runSync } from '../services/syncService';
+import { RefreshCw, Plus, CloudUpload, CloudDownload } from 'lucide-react';
+import { runSync, getSelectedFarmId, type SyncMode } from '../services/syncService';
 import { useAuth } from '../contexts/AuthContext';
 import { TaskModal } from '../components/kanban/TaskModal';
 
@@ -13,7 +13,6 @@ export function TasksKanbanPage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { session } = useAuth();
-  const farmId = session?.user.id; // Just a dummy check, we rely on local filters mostly
 
   useEffect(() => {
     loadTasks();
@@ -24,14 +23,20 @@ export function TasksKanbanPage() {
     setTasks(allTasks);
   }
 
-  async function handleSync() {
+  async function handleSync(mode: SyncMode) {
+    const farmId = getSelectedFarmId();
+    if (!session?.user?.id || !farmId) {
+      alert('Selecione uma fazenda primeiro.');
+      return;
+    }
+
     setIsSyncing(true);
     try {
-      if (!session?.user?.id) return;
-      await runSync({ farmId: session.user.id, mode: 'two_way', userId: session.user.id });
+      await runSync({ farmId, mode, userId: session.user.id });
       await loadTasks();
     } catch (err) {
       console.error('Sync failed', err);
+      alert('Falha ao sincronizar. Verifique sua conexão.');
     } finally {
       setIsSyncing(false);
     }
@@ -39,22 +44,41 @@ export function TasksKanbanPage() {
 
   return (
     <PageShell title="Tarefas">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-field-600 text-white rounded-md hover:bg-field-700"
+          className="flex items-center gap-2 px-4 py-2 bg-field-600 text-white font-medium rounded-md hover:bg-field-700 whitespace-nowrap"
         >
           <Plus className="w-5 h-5" />
           Nova Tarefa
         </button>
-        <button
-          onClick={handleSync}
-          disabled={isSyncing}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-md hover:bg-slate-200"
-        >
-          <RefreshCw className={`w-5 h-5 ${isSyncing ? 'animate-spin' : ''}`} />
-          Sincronizar
-        </button>
+        
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => handleSync('two_way')}
+            disabled={isSyncing}
+            className="flex items-center gap-2 px-4 py-2 bg-field-600 text-white text-sm font-semibold rounded-md hover:bg-field-700 disabled:opacity-60 whitespace-nowrap"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+            Sincronizar agora
+          </button>
+          <button
+            onClick={() => handleSync('push')}
+            disabled={isSyncing}
+            className="flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-700 text-sm font-semibold rounded-md hover:bg-slate-100 disabled:opacity-60 whitespace-nowrap"
+          >
+            <CloudUpload className="w-4 h-4" />
+            Enviar dados locais para nuvem
+          </button>
+          <button
+            onClick={() => handleSync('pull')}
+            disabled={isSyncing}
+            className="flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-700 text-sm font-semibold rounded-md hover:bg-slate-100 disabled:opacity-60 whitespace-nowrap"
+          >
+            <CloudDownload className="w-4 h-4" />
+            Baixar dados da nuvem
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-x-auto pb-4">
