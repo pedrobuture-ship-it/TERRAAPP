@@ -32,7 +32,8 @@ create table if not exists public.farm_members (
   created_by uuid default auth.uid() references auth.users(id),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  deleted_at timestamptz
+  deleted_at timestamptz,
+  unique (farm_id, user_id)
 );
 
 create unique index if not exists farm_members_active_user_key
@@ -797,3 +798,12 @@ $$;
 grant execute on function public.invite_user_to_farm(uuid, text, text) to authenticated;
 grant execute on function public.get_farm_members_with_email(uuid) to authenticated;
 
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'farm_members_farm_id_user_id_key') then
+    alter table public.farm_members add constraint farm_members_farm_id_user_id_key unique (farm_id, user_id);
+  end if;
+end $$;
+
+drop index if exists public.farm_members_active_user_key;
