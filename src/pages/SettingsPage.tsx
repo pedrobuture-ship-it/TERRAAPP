@@ -280,12 +280,16 @@ export function SettingsPage() {
       return;
     }
 
+    if (!newFarmName.trim()) {
+      setError('Informe o nome da fazenda.');
+      return;
+    }
+
     setLoadingOnline(true);
-    setNotice(null);
     setError(null);
 
     try {
-      const farm = await createRemoteFarm(newFarmName || form.farm_name, user.id);
+      const farm = await createRemoteFarm(newFarmName, user.id);
       setRemoteFarms((current) => [...current, farm].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')));
       setSelectedRemoteFarmId(farm.id);
       setNewFarmName('');
@@ -444,148 +448,6 @@ export function SettingsPage() {
                 <Switch checked={darkMode} onChange={toggleDarkMode} label="Modo escuro" />
               </div>
             </section>
-
-            <form onSubmit={handleSubmit} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="mb-4 flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-field-100 text-field-600">
-                  <Building2 size={24} aria-hidden="true" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-base font-semibold text-slate-950">Dados da fazenda</h3>
-                    {saving ? (
-                      <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">Salvando...</span>
-                    ) : settings?.sync_status && settings.sync_status !== 'synced' ? (
-                      <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">Pendente</span>
-                    ) : (
-                      <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Sincronizado</span>
-                    )}
-                  </div>
-                  <p className="mt-1 text-sm leading-6 text-slate-600">
-                    Preencha as informaÃ§Ãµes da sua propriedade. O aplicativo funciona offline e sincroniza tudo automaticamente quando vocÃª tiver internet.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <label className="block md:col-span-2">
-                  <span className="text-sm font-medium text-slate-700">Nome da fazenda <span className="text-red-500">*</span></span>
-                  <input
-                    value={activeRemoteFarm ? activeRemoteFarm.name : form.farm_name}
-                    onChange={(event) => updateForm('farm_name', event.target.value)}
-                    disabled={Boolean(activeRemoteFarm)}
-                    className="mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100 disabled:bg-slate-50 disabled:text-slate-500"
-                    placeholder="Fazenda Boa Vista"
-                  />
-                  {activeRemoteFarm && (
-                    <p className="mt-1 text-xs text-slate-500">
-                      O nome estÃ¡ bloqueado pela nuvem. Para mudar, crie uma nova fazenda online.
-                    </p>
-                  )}
-                </label>
-
-                <label className="block">
-                  <span className="text-sm font-medium text-slate-700">ProprietÃ¡rio</span>
-                  <input
-                    value={form.owner_name}
-                    onChange={(event) => updateForm('owner_name', event.target.value)}
-                    className="mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
-                    placeholder="Nome do proprietÃ¡rio"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="text-sm font-medium text-slate-700">Ãrea total</span>
-                  <input
-                    value={form.area_total_hectares}
-                    onChange={(event) => updateForm('area_total_hectares', event.target.value)}
-                    inputMode="decimal"
-                    className="mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
-                    placeholder="hectares"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="text-sm font-medium text-slate-700">Cidade</span>
-                  <input
-                    value={form.city}
-                    onChange={(event) => updateForm('city', event.target.value)}
-                    className="mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
-                    placeholder="Cidade"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="text-sm font-medium text-slate-700">Estado</span>
-                  <input
-                    value={form.state}
-                    onChange={(event) => updateForm('state', event.target.value.toUpperCase().slice(0, 2))}
-                    className="mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm uppercase outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
-                    placeholder="UF"
-                    maxLength={2}
-                  />
-                </label>
-
-                <label className="block md:col-span-2">
-                  <span className="text-sm font-medium text-slate-700">ObservaÃ§Ãµes</span>
-                  <textarea
-                    value={form.notes}
-                    onChange={(event) => updateForm('notes', event.target.value)}
-                    rows={4}
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
-                    placeholder="InformaÃ§Ãµes gerais da propriedade"
-                  />
-                </label>
-              </div>
-
-              <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
-                <h4 className="text-sm font-semibold text-slate-950">Alertas da fazenda</h4>
-                <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  <label className="block">
-                    <span className="text-sm font-medium text-slate-700">Alerta sÃªmen baixo</span>
-                    <div className="relative mt-1">
-                      <input
-                        value={form.low_semen_doses_alert}
-                        onChange={(event) => updateForm('low_semen_doses_alert', event.target.value)}
-                        className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-3 pr-16 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
-                        placeholder="5"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">doses</span>
-                    </div>
-                  </label>
-
-                  <label className="block">
-                    <span className="text-sm font-medium text-slate-700">Alerta sanitÃ¡rio dias</span>
-                    <div className="relative mt-1">
-                      <input
-                        value={form.sanitary_alert_days}
-                        onChange={(event) => updateForm('sanitary_alert_days', event.target.value)}
-                        className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-3 pr-16 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
-                        placeholder="30"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">dias</span>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-slate-100 pt-5">
-                <div>
-                  <p className="text-xs text-slate-500 mb-1">* campo obrigatÃ³rio</p>
-                  <p className="text-sm text-slate-500">
-                    {settings ? `Atualizado em ${formatDatePtBr(settings.updated_at)}` : 'Ainda sem configuraÃ§Ã£o salva.'}
-                  </p>
-                </div>
-                <button
-                  type="submit"
-                  disabled={saving || loading}
-                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-field-600 px-6 text-sm font-semibold text-white transition hover:bg-field-700 disabled:opacity-70 sm:w-auto"
-                >
-                  <Save size={18} aria-hidden="true" />
-                  {saving ? 'Salvando...' : 'Salvar configuraÃ§Ãµes'}
-                </button>
-              </div>
-            </form>
           </div>
 
           <div className="space-y-6">
@@ -662,7 +524,7 @@ export function SettingsPage() {
                         <button
                           type="button"
                           onClick={handleCreateRemoteFarm}
-                          disabled={loadingOnline || !(newFarmName.trim() || form.farm_name.trim())}
+                          disabled={loadingOnline || !newFarmName.trim()}
                           className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           Criar
