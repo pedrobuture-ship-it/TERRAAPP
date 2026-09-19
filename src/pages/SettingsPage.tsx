@@ -18,6 +18,7 @@ function Switch({ checked, onChange, label }: { checked: boolean; onChange: (val
   );
 }
 
+import { adminAuthClient } from '../services/adminAuthService';
 import {
   farmSettingsService,
   getCurrent,
@@ -118,7 +119,7 @@ async function create(payload: CreateFarmSettingsInput) {
 function roleLabel(role: string) {
   switch (role) {
     case 'owner':
-      return 'Líder / Criador';
+      return 'LÃ­der / Criador';
     case 'admin':
       return 'Administrador';
     default:
@@ -160,6 +161,7 @@ export function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [inviteEmail, setInviteEmail] = useState('');
+  const [invitePassword, setInvitePassword] = useState('');
   const [inviteRole, setInviteRole] = useState<'admin' | 'member'>('member');
 
   const activeRemoteFarm = useMemo(
@@ -177,7 +179,7 @@ export function SettingsPage() {
       setSettings(currentSettings);
       setForm(toForm(currentSettings));
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar configurações.');
+      setError(loadError instanceof Error ? loadError.message : 'NÃ£o foi possÃ­vel carregar configuraÃ§Ãµes.');
     } finally {
       setLoading(false);
     }
@@ -212,7 +214,7 @@ export function SettingsPage() {
         setMembers([]);
       }
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar fazendas online.');
+      setError(loadError instanceof Error ? loadError.message : 'NÃ£o foi possÃ­vel carregar fazendas online.');
     } finally {
       setLoadingOnline(false);
     }
@@ -243,7 +245,7 @@ export function SettingsPage() {
       }
 
       if (!payload.farm_name.trim()) {
-        throw new Error('Nome da fazenda é obrigatório.');
+        throw new Error('Nome da fazenda Ã© obrigatÃ³rio.');
       }
 
       if (
@@ -251,7 +253,7 @@ export function SettingsPage() {
         Number.isNaN(payload.app_preferences.low_semen_doses_alert) ||
         Number.isNaN(payload.app_preferences.sanitary_alert_days)
       ) {
-        throw new Error('Informe números válidos nas configurações.');
+        throw new Error('Informe nÃºmeros vÃ¡lidos nas configuraÃ§Ãµes.');
       }
 
       const savedSettings = settings
@@ -264,9 +266,9 @@ export function SettingsPage() {
       
 
 
-      setNotice('Configurações da fazenda salvas no banco local.');
+      setNotice('ConfiguraÃ§Ãµes da fazenda salvas no banco local.');
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'Não foi possível salvar configurações.');
+      setError(submitError instanceof Error ? submitError.message : 'NÃ£o foi possÃ­vel salvar configuraÃ§Ãµes.');
     } finally {
       setSaving(false);
     }
@@ -290,7 +292,7 @@ export function SettingsPage() {
       setNotice('Fazenda online criada e selecionada.');
       setMembers(await listRemoteFarmMembers(farm.id));
     } catch (createError) {
-      setError(createError instanceof Error ? createError.message : 'Não foi possível criar fazenda online.');
+      setError(createError instanceof Error ? createError.message : 'NÃ£o foi possÃ­vel criar fazenda online.');
     } finally {
       setLoadingOnline(false);
     }
@@ -299,7 +301,7 @@ export function SettingsPage() {
   async function handleDeleteRemoteFarm() {
     if (!user || !activeRemoteFarm) return;
 
-    if (!window.confirm(`Tem certeza que deseja EXCLUIR a fazenda online "${activeRemoteFarm.name}"? Esta ação não pode ser desfeita.`)) {
+    if (!window.confirm(`Tem certeza que deseja EXCLUIR a fazenda online "${activeRemoteFarm.name}"? Esta aÃ§Ã£o nÃ£o pode ser desfeita.`)) {
       return;
     }
 
@@ -309,10 +311,10 @@ export function SettingsPage() {
 
     try {
       await deleteRemoteFarm(activeRemoteFarm.id, user.id);
-      setNotice('Fazenda online excluída com sucesso.');
+      setNotice('Fazenda online excluÃ­da com sucesso.');
       await loadOnlineFarms();
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : 'Não foi possível excluir a fazenda online.');
+      setError(deleteError instanceof Error ? deleteError.message : 'NÃ£o foi possÃ­vel excluir a fazenda online.');
     } finally {
       setLoadingOnline(false);
     }
@@ -320,16 +322,36 @@ export function SettingsPage() {
 
   async function handleInviteMember(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!activeRemoteFarm || !inviteEmail.trim()) return;
+    if (!activeRemoteFarm || !inviteEmail.trim() || !invitePassword.trim()) return;
 
     setLoadingOnline(true);
     setNotice(null);
     setError(null);
 
     try {
+      if (!adminAuthClient) {
+        throw new Error('Supabase não configurado');
+      }
+
+      // 1. Create the user invisibly using the secondary auth client
+      const { data: signUpData, error: signUpError } = await adminAuthClient.auth.signUp({
+        email: inviteEmail.trim(),
+        password: invitePassword.trim(),
+      });
+
+      if (signUpError) {
+        // If the user already exists, it might throw an error or not depending on Supabase settings.
+        // We will just try to proceed. But if it's a real error like password length, we throw it.
+        if (!signUpError.message.toLowerCase().includes('already registered')) {
+          throw signUpError;
+        }
+      }
+
+      // 2. Link the user to the farm
       await inviteRemoteFarmMember(activeRemoteFarm.id, inviteEmail.trim(), inviteRole);
-      setNotice('Membro adicionado com sucesso.');
+      setNotice('Conta criada e membro adicionado com sucesso.');
       setInviteEmail('');
+      setInvitePassword('');
       setMembers(await listRemoteFarmMembers(activeRemoteFarm.id));
     } catch (inviteError) {
       setError(inviteError instanceof Error ? inviteError.message : 'Não foi possível adicionar o membro.');
@@ -349,7 +371,7 @@ export function SettingsPage() {
       setMembers(await listRemoteFarmMembers(activeRemoteFarm.id));
       setNotice('Papel do membro atualizado com sucesso.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível atualizar o membro.');
+      setError(err instanceof Error ? err.message : 'NÃ£o foi possÃ­vel atualizar o membro.');
     } finally {
       setLoadingOnline(false);
     }
@@ -369,7 +391,7 @@ export function SettingsPage() {
       setNotice('Membro removido com sucesso.');
       setMembers(await listRemoteFarmMembers(member.farm_id));
     } catch (removeError) {
-      setError(removeError instanceof Error ? removeError.message : 'Não foi possível remover o membro.');
+      setError(removeError instanceof Error ? removeError.message : 'NÃ£o foi possÃ­vel remover o membro.');
     } finally {
       setLoadingOnline(false);
     }
@@ -388,7 +410,7 @@ export function SettingsPage() {
       try {
         setMembers(await listRemoteFarmMembers(farmId));
       } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar membros.');
+        setError(loadError instanceof Error ? loadError.message : 'NÃ£o foi possÃ­vel carregar membros.');
       } finally {
         setLoadingOnline(false);
       }
@@ -404,17 +426,17 @@ export function SettingsPage() {
   const isAdmin = currentUserRole === 'admin';
 
   return (
-    <PageShell title="Configurações">
+    <PageShell title="ConfiguraÃ§Ãµes">
       <div className="mx-auto max-w-4xl space-y-6">
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_350px]">
           <div className="space-y-6">
             <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-              <h3 className="text-base font-semibold text-slate-950">Configurações do Aplicativo</h3>
+              <h3 className="text-base font-semibold text-slate-950">ConfiguraÃ§Ãµes do Aplicativo</h3>
               <p className="mt-1 text-sm leading-6 text-slate-600">
-                Essas preferências afetam apenas como você vê o aplicativo neste dispositivo.
+                Essas preferÃªncias afetam apenas como vocÃª vÃª o aplicativo neste dispositivo.
               </p>
               <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Não sincronizadas com a nuvem
+                NÃ£o sincronizadas com a nuvem
               </p>
               
               <div className="grid gap-4 md:grid-cols-2">
@@ -440,7 +462,7 @@ export function SettingsPage() {
                     )}
                   </div>
                   <p className="mt-1 text-sm leading-6 text-slate-600">
-                    Preencha as informações da sua propriedade. O aplicativo funciona offline e sincroniza tudo automaticamente quando você tiver internet.
+                    Preencha as informaÃ§Ãµes da sua propriedade. O aplicativo funciona offline e sincroniza tudo automaticamente quando vocÃª tiver internet.
                   </p>
                 </div>
               </div>
@@ -457,23 +479,23 @@ export function SettingsPage() {
                   />
                   {activeRemoteFarm && (
                     <p className="mt-1 text-xs text-slate-500">
-                      O nome está bloqueado pela nuvem. Para mudar, crie uma nova fazenda online.
+                      O nome estÃ¡ bloqueado pela nuvem. Para mudar, crie uma nova fazenda online.
                     </p>
                   )}
                 </label>
 
                 <label className="block">
-                  <span className="text-sm font-medium text-slate-700">Proprietário</span>
+                  <span className="text-sm font-medium text-slate-700">ProprietÃ¡rio</span>
                   <input
                     value={form.owner_name}
                     onChange={(event) => updateForm('owner_name', event.target.value)}
                     className="mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
-                    placeholder="Nome do proprietário"
+                    placeholder="Nome do proprietÃ¡rio"
                   />
                 </label>
 
                 <label className="block">
-                  <span className="text-sm font-medium text-slate-700">Área total</span>
+                  <span className="text-sm font-medium text-slate-700">Ãrea total</span>
                   <input
                     value={form.area_total_hectares}
                     onChange={(event) => updateForm('area_total_hectares', event.target.value)}
@@ -505,13 +527,13 @@ export function SettingsPage() {
                 </label>
 
                 <label className="block md:col-span-2">
-                  <span className="text-sm font-medium text-slate-700">Observações</span>
+                  <span className="text-sm font-medium text-slate-700">ObservaÃ§Ãµes</span>
                   <textarea
                     value={form.notes}
                     onChange={(event) => updateForm('notes', event.target.value)}
                     rows={4}
                     className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
-                    placeholder="Informações gerais da propriedade"
+                    placeholder="InformaÃ§Ãµes gerais da propriedade"
                   />
                 </label>
               </div>
@@ -520,7 +542,7 @@ export function SettingsPage() {
                 <h4 className="text-sm font-semibold text-slate-950">Alertas da fazenda</h4>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   <label className="block">
-                    <span className="text-sm font-medium text-slate-700">Alerta sêmen baixo</span>
+                    <span className="text-sm font-medium text-slate-700">Alerta sÃªmen baixo</span>
                     <div className="relative mt-1">
                       <input
                         value={form.low_semen_doses_alert}
@@ -533,7 +555,7 @@ export function SettingsPage() {
                   </label>
 
                   <label className="block">
-                    <span className="text-sm font-medium text-slate-700">Alerta sanitário dias</span>
+                    <span className="text-sm font-medium text-slate-700">Alerta sanitÃ¡rio dias</span>
                     <div className="relative mt-1">
                       <input
                         value={form.sanitary_alert_days}
@@ -549,9 +571,9 @@ export function SettingsPage() {
 
               <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-slate-100 pt-5">
                 <div>
-                  <p className="text-xs text-slate-500 mb-1">* campo obrigatório</p>
+                  <p className="text-xs text-slate-500 mb-1">* campo obrigatÃ³rio</p>
                   <p className="text-sm text-slate-500">
-                    {settings ? `Atualizado em ${formatDatePtBr(settings.updated_at)}` : 'Ainda sem configuração salva.'}
+                    {settings ? `Atualizado em ${formatDatePtBr(settings.updated_at)}` : 'Ainda sem configuraÃ§Ã£o salva.'}
                   </p>
                 </div>
                 <button
@@ -560,7 +582,7 @@ export function SettingsPage() {
                   className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-field-600 px-6 text-sm font-semibold text-white transition hover:bg-field-700 disabled:opacity-70 sm:w-auto"
                 >
                   <Save size={18} aria-hidden="true" />
-                  {saving ? 'Salvando...' : 'Salvar configurações'}
+                  {saving ? 'Salvando...' : 'Salvar configuraÃ§Ãµes'}
                 </button>
               </div>
             </form>
@@ -573,23 +595,23 @@ export function SettingsPage() {
                   <RefreshCw size={20} aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-slate-950">Sincronização Online</h3>
+                  <h3 className="text-base font-semibold text-slate-950">SincronizaÃ§Ã£o Online</h3>
                   <p className="mt-1 text-sm leading-6 text-slate-600">
-                    Conecte o aplicativo a um banco de dados online para acessar de outros dispositivos ou ter backup automático em tempo real.
+                    Conecte o aplicativo a um banco de dados online para acessar de outros dispositivos ou ter backup automÃ¡tico em tempo real.
                   </p>
                 </div>
               </div>
 
               {!isSupabaseConfigured ? (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                  <p className="font-semibold">Supabase não configurado.</p>
+                  <p className="font-semibold">Supabase nÃ£o configurado.</p>
                   <p className="mt-1">
-                    Preencha <code>VITE_SUPABASE_URL</code> e <code>VITE_SUPABASE_ANON_KEY</code> no ambiente para ativar a sincronização online.
+                    Preencha <code>VITE_SUPABASE_URL</code> e <code>VITE_SUPABASE_ANON_KEY</code> no ambiente para ativar a sincronizaÃ§Ã£o online.
                   </p>
                 </div>
               ) : !isOnline ? (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                  Sem internet agora. A seleção online fica disponível quando a conexão voltar.
+                  Sem internet agora. A seleÃ§Ã£o online fica disponÃ­vel quando a conexÃ£o voltar.
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -613,7 +635,7 @@ export function SettingsPage() {
                             </optgroup>
                           )}
                           {participatingFarms.length > 0 && (
-                            <optgroup label="Fazendas que você é participante">
+                            <optgroup label="Fazendas que vocÃª Ã© participante">
                               {participatingFarms.map((farm) => (
                                 <option key={farm.id} value={farm.id}>{farm.name}</option>
                               ))}
@@ -624,27 +646,31 @@ export function SettingsPage() {
                     </select>
                   </label>
 
-                  <hr className="my-6 border-t border-slate-200" />
+                  {remoteFarms.length === 0 && (
+                    <>
+                    <hr className="my-6 border-t border-slate-200" />
 
-                  <label className="block">
-                    <span className="text-sm font-medium text-slate-700">Criar fazenda online</span>
-                    <div className="mt-1 flex gap-2">
-                      <input
-                        value={newFarmName}
-                        onChange={(event) => setNewFarmName(event.target.value)}
-                        placeholder="Sítio Boa Vista"
-                        className="h-11 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleCreateRemoteFarm}
-                        disabled={loadingOnline || !(newFarmName.trim() || form.farm_name.trim())}
-                        className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        Criar
-                      </button>
-                    </div>
-                  </label>
+                    <label className="block">
+                      <span className="text-sm font-medium text-slate-700">Criar fazenda online</span>
+                      <div className="mt-1 flex gap-2">
+                        <input
+                          value={newFarmName}
+                          onChange={(event) => setNewFarmName(event.target.value)}
+                          placeholder="SÃ­tio Boa Vista"
+                          className="h-11 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleCreateRemoteFarm}
+                          disabled={loadingOnline || !(newFarmName.trim() || form.farm_name.trim())}
+                          className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          Criar
+                        </button>
+                      </div>
+                    </label>
+                    </>
+                  )}
 
                   {activeRemoteFarm ? (
                     <div className="flex items-center justify-between gap-4 rounded-lg border border-field-100 bg-field-50 p-3 text-sm text-field-800">
@@ -654,7 +680,7 @@ export function SettingsPage() {
                           {activeRemoteFarm.name}
                         </div>
                         <p className="mt-1">
-                          Esta é a fazenda ativa para os próximos envios e baixas do Supabase.
+                          Esta Ã© a fazenda ativa para os prÃ³ximos envios e baixas do Supabase.
                         </p>
                       </div>
                       {isOwner && (
@@ -682,7 +708,7 @@ export function SettingsPage() {
                 <div>
                   <h3 className="text-base font-semibold text-slate-950">Membros da fazenda</h3>
                   <p className="mt-1 text-sm leading-6 text-slate-600">
-                    Adicione novos membros pelo e-mail (eles já devem ter criado conta no aplicativo).
+                    Crie contas e defina o acesso da sua equipe à sua fazenda na nuvem.
                   </p>
                 </div>
               </div>
@@ -690,7 +716,8 @@ export function SettingsPage() {
               {selectedRemoteFarmId ? (
                 <div className="space-y-4">
                   {(isOwner || isAdmin) && (
-                    <form onSubmit={handleInviteMember} className="flex flex-col gap-2">
+                    <form onSubmit={handleInviteMember} className="flex flex-col gap-2 rounded-lg bg-slate-50 p-4 border border-slate-200">
+                      <h4 className="text-sm font-semibold text-slate-900 mb-1">Criar conta de funcionário</h4>
                       <input
                         type="email"
                         value={inviteEmail}
@@ -699,22 +726,32 @@ export function SettingsPage() {
                         className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
                       />
                       <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={invitePassword}
+                          onChange={(event) => setInvitePassword(event.target.value)}
+                          placeholder="Senha inicial"
+                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
+                        />
+                      </div>
+                      <div className="flex gap-2">
                         <select
                           value={inviteRole}
                           onChange={(event) => setInviteRole(event.target.value as 'admin' | 'member')}
                           className="h-11 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
                         >
-                          <option value="member">Membro</option>
+                          <option value="member">Membro / Peão</option>
                           <option value="admin">Administrador</option>
                         </select>
                         <button
                           type="submit"
-                          disabled={loadingOnline || !inviteEmail.trim()}
+                          disabled={loadingOnline || !inviteEmail.trim() || !invitePassword.trim()}
                           className="inline-flex h-11 items-center justify-center rounded-lg bg-slate-800 px-4 text-sm font-semibold text-white transition hover:bg-slate-900 disabled:opacity-60"
                         >
-                          Adicionar
+                          Criar e Adicionar
                         </button>
                       </div>
+                      <p className="text-xs text-slate-500 mt-1">O funcionário usará este e-mail e senha para logar no aplicativo. Você poderá alterar o nível de acesso depois.</p>
                     </form>
                   )}
 
@@ -729,7 +766,7 @@ export function SettingsPage() {
                           <div key={member.id} className="flex items-center justify-between p-3 text-sm">
                             <div>
                               <p className="font-semibold text-slate-950">
-                                {isSelf ? user?.email ?? 'Você' : member.email || member.user_id}
+                                {isSelf ? user?.email ?? 'VocÃª' : member.email || member.user_id}
                               </p>
                               <div className="mt-1 flex items-center gap-2 text-slate-500">
                                 {isOwner && !isLeader && !isSelf ? (
@@ -745,7 +782,7 @@ export function SettingsPage() {
                                 ) : (
                                   <span>{roleLabel(member.role)}</span>
                                 )}
-                                <span>• desde {formatDatePtBr(member.created_at)}</span>
+                                <span>â€¢ desde {formatDatePtBr(member.created_at)}</span>
                               </div>
                             </div>
                             {canRemove && (
@@ -797,7 +834,7 @@ export function SettingsPage() {
 
       {loading ? (
         <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-500">
-          Carregando configurações locais...
+          Carregando configuraÃ§Ãµes locais...
         </div>
       ) : null}
     </PageShell>

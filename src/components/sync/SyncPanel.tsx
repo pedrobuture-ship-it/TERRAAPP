@@ -290,26 +290,28 @@ export function SyncPanel() {
               </select>
             </label>
 
-            <label className="block">
-              <span className="text-sm font-medium text-slate-700">Criar fazenda online</span>
-              <div className="mt-1 flex gap-2">
-                <input
-                  value={newFarmName}
-                  onChange={(event) => setNewFarmName(event.target.value)}
-                  placeholder="Nome da fazenda"
-                  className="h-11 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
-                />
-                <button
-                  type="button"
-                  onClick={handleCreateFarm}
-                  disabled={loadingFarms || !newFarmName.trim()}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <LinkIcon size={17} aria-hidden="true" />
-                  Criar
-                </button>
-              </div>
-            </label>
+            {farms.length === 0 && (
+              <label className="block">
+                <span className="text-sm font-medium text-slate-700">Criar fazenda online</span>
+                <div className="mt-1 flex gap-2">
+                  <input
+                    value={newFarmName}
+                    onChange={(event) => setNewFarmName(event.target.value)}
+                    placeholder="Nome da fazenda"
+                    className="h-11 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCreateFarm}
+                    disabled={loadingFarms || !newFarmName.trim()}
+                    className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <LinkIcon size={17} aria-hidden="true" />
+                    Criar
+                  </button>
+                </div>
+              </label>
+            )}
           </div>
 
           <div className="mt-5 flex flex-col gap-2 xl:flex-row">

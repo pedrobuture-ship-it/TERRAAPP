@@ -1,26 +1,17 @@
-import { ArrowLeft, Loader2, LogIn, UserPlus, WifiOff } from 'lucide-react';
+import { ArrowLeft, Loader2, LogIn, WifiOff } from 'lucide-react';
 import { useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-type LoginMode = 'signin' | 'signup';
-
-interface LoginPageProps {
-  initialMode?: LoginMode;
-}
-
-export function LoginPage({ initialMode = 'signin' }: LoginPageProps) {
+export function LoginPage() {
   const navigate = useNavigate();
-  const { user, loading, isOnline, isSupabaseConfigured, signIn, signUp } = useAuth();
-  const [mode, setMode] = useState<LoginMode>(initialMode);
+  const { user, loading, isOnline, isSupabaseConfigured, signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const isSignup = mode === 'signup';
   const canUseOnlineAuth = isSupabaseConfigured && isOnline;
 
   const statusMessage = useMemo(() => {
@@ -29,21 +20,15 @@ export function LoginPage({ initialMode = 'signin' }: LoginPageProps) {
     }
 
     if (!isOnline) {
-      return 'Sem internet agora. Login e cadastro online ficam pausados, mas o uso offline local continua liberado.';
+      return 'Sem internet agora. Login online fica pausado, mas o uso offline local continua liberado.';
     }
 
     if (user) {
       return `Sessão ativa: ${user.email ?? 'usuário logado'}.`;
     }
 
-    return 'Use sua conta online para futura sincronização e backup em nuvem.';
+    return 'Use sua conta online para sincronização e backup em nuvem.';
   }, [isOnline, isSupabaseConfigured, user]);
-
-  function switchMode(nextMode: LoginMode) {
-    setMode(nextMode);
-    setNotice(null);
-    setError(null);
-  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -60,26 +45,12 @@ export function LoginPage({ initialMode = 'signin' }: LoginPageProps) {
       return;
     }
 
-    if (isSignup && password !== confirmPassword) {
-      setError('A confirmação de senha não confere.');
-      return;
-    }
-
     setSubmitting(true);
 
     try {
-      if (isSignup) {
-        const result = await signUp(email.trim(), password);
-        setNotice(
-          result.needsEmailConfirmation
-            ? 'Cadastro criado. Verifique seu e-mail para confirmar a conta antes de entrar.'
-            : 'Cadastro criado e sessão iniciada.',
-        );
-      } else {
-        await signIn(email.trim(), password);
-        setNotice('Login realizado com sucesso.');
-        navigate('/dashboard');
-      }
+      await signIn(email.trim(), password);
+      setNotice('Login realizado com sucesso.');
+      navigate('/dashboard');
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Não foi possível concluir a operação.');
     } finally {
@@ -103,9 +74,7 @@ export function LoginPage({ initialMode = 'signin' }: LoginPageProps) {
             <img src="/icons/icon.svg" alt="" className="h-12 w-12 rounded-2xl" />
             <div>
               <h1 className="text-xl font-semibold text-slate-950">TERRA</h1>
-              <p className="text-sm text-slate-500">
-                {isSignup ? 'Cadastro online' : 'Login online'}
-              </p>
+              <p className="text-sm text-slate-500">Login</p>
             </div>
           </div>
 
@@ -114,27 +83,6 @@ export function LoginPage({ initialMode = 'signin' }: LoginPageProps) {
               {!isOnline ? <WifiOff size={18} className="mt-0.5 text-slate-500" aria-hidden="true" /> : null}
               <p>{statusMessage}</p>
             </div>
-          </div>
-
-          <div className="mb-5 grid grid-cols-2 rounded-lg bg-slate-100 p-1">
-            <button
-              type="button"
-              onClick={() => switchMode('signin')}
-              className={`h-10 rounded-md text-sm font-semibold transition ${
-                !isSignup ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              Entrar
-            </button>
-            <button
-              type="button"
-              onClick={() => switchMode('signup')}
-              className={`h-10 rounded-md text-sm font-semibold transition ${
-                isSignup ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              Criar conta
-            </button>
           </div>
 
           {notice ? (
@@ -169,24 +117,10 @@ export function LoginPage({ initialMode = 'signin' }: LoginPageProps) {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="Mínimo de 6 caracteres"
-                autoComplete={isSignup ? 'new-password' : 'current-password'}
+                autoComplete="current-password"
                 className="mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
               />
             </label>
-
-            {isSignup ? (
-              <label className="block">
-                <span className="text-sm font-medium text-slate-700">Confirmar senha</span>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
-                  placeholder="Repita a senha"
-                  autoComplete="new-password"
-                  className="mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
-                />
-              </label>
-            ) : null}
 
             <button
               type="submit"
@@ -195,17 +129,15 @@ export function LoginPage({ initialMode = 'signin' }: LoginPageProps) {
             >
               {submitting ? (
                 <Loader2 size={18} className="animate-spin" aria-hidden="true" />
-              ) : isSignup ? (
-                <UserPlus size={18} aria-hidden="true" />
               ) : (
                 <LogIn size={18} aria-hidden="true" />
               )}
-              {isSignup ? 'Criar conta' : 'Entrar'}
+              Entrar
             </button>
           </form>
 
           <p className="mt-5 text-center text-xs leading-5 text-slate-500">
-            O login não é obrigatório para usar os cadastros offline deste dispositivo.
+            Apenas membros autorizados possuem acesso. O uso offline local continua liberado.
           </p>
         </section>
       </div>
