@@ -12,10 +12,6 @@ export function AppLayout() {
   const { hasCompletedFirstLogin } = useAuth();
   const activeRoute = appRoutes.find((route) => location.pathname.startsWith(route.path));
 
-  if (!hasCompletedFirstLogin) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
-  }
-
   useEffect(() => {
     if (localStorage.getItem('terra_compact_mode') === 'true') {
       document.body.classList.add('compact-mode');
@@ -29,6 +25,10 @@ export function AppLayout() {
       document.documentElement.classList.remove('dark');
     }
   }, [location.pathname]);
+
+  if (!hasCompletedFirstLogin) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
