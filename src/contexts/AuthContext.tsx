@@ -20,6 +20,7 @@ interface AuthContextValue {
   loading: boolean;
   isOnline: boolean;
   isSupabaseConfigured: boolean;
+  hasCompletedFirstLogin: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<SignUpResult>;
   signOut: () => Promise<void>;
@@ -71,6 +72,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(getOnlineStatus);
+  const [hasCompletedFirstLogin, setHasCompletedFirstLogin] = useState(() => {
+    try {
+      return localStorage.getItem('terra_app:first_login_done') === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     function handleOnline() {
@@ -129,6 +137,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (session && !hasCompletedFirstLogin) {
+      setHasCompletedFirstLogin(true);
+      try {
+        localStorage.setItem('terra_app:first_login_done', 'true');
+      } catch {
+        // ignora
+      }
+    }
+  }, [session, hasCompletedFirstLogin]);
+
   const signIn = useCallback(
     async (email: string, password: string) => {
       if (!supabase || !isOnline) {
@@ -139,6 +158,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         throw new Error(friendlyAuthError(error, isOnline));
+      }
+
+      setHasCompletedFirstLogin(true);
+      try {
+        localStorage.setItem('terra_app:first_login_done', 'true');
+      } catch {
+        // Ignora erro se o localStorage estiver bloqueado
       }
     },
     [isOnline],
@@ -185,11 +211,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       isOnline,
       isSupabaseConfigured,
+      hasCompletedFirstLogin,
       signIn,
       signUp,
       signOut,
     }),
-    [isOnline, loading, session, signIn, signOut, signUp],
+    [isOnline, loading, session, hasCompletedFirstLogin, signIn, signOut, signUp],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

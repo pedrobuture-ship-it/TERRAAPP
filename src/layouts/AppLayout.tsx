@@ -1,14 +1,20 @@
 import { useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { Header } from '../components/layout/Header';
 import { MobileNav } from '../components/layout/MobileNav';
 import { Sidebar } from '../components/layout/Sidebar';
 import { appRoutes } from '../routes/appRoutes';
 import { getCurrent } from '../services/farmSettingsService';
+import { useAuth } from '../contexts/AuthContext';
 
 export function AppLayout() {
   const location = useLocation();
+  const { hasCompletedFirstLogin } = useAuth();
   const activeRoute = appRoutes.find((route) => location.pathname.startsWith(route.path));
+
+  if (!hasCompletedFirstLogin) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
 
   useEffect(() => {
     if (localStorage.getItem('terra_compact_mode') === 'true') {

@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { user, loading, isOnline, isSupabaseConfigured, signIn } = useAuth();
+  const { user, loading, isOnline, isSupabaseConfigured, signIn, hasCompletedFirstLogin } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -20,15 +20,19 @@ export function LoginPage() {
     }
 
     if (!isOnline) {
-      return 'Sem internet agora. Login online fica pausado, mas o uso offline local continua liberado.';
+      return hasCompletedFirstLogin
+        ? 'Sem internet agora. Login online fica pausado, mas o uso offline local continua liberado.'
+        : 'Sem internet agora. É necessária conexão no primeiro acesso para validação da conta.';
     }
 
     if (user) {
       return `Sessão ativa: ${user.email ?? 'usuário logado'}.`;
     }
 
-    return 'Use sua conta online para sincronização e backup em nuvem.';
-  }, [isOnline, isSupabaseConfigured, user]);
+    return hasCompletedFirstLogin
+      ? 'Use sua conta online para sincronização e backup em nuvem.'
+      : 'Bem-vindo! Faça o login inicial para liberar o acesso ao aplicativo.';
+  }, [isOnline, isSupabaseConfigured, user, hasCompletedFirstLogin]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -61,13 +65,15 @@ export function LoginPage() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-md flex-col justify-center">
-        <Link
-          to="/dashboard"
-          className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-field-700 hover:text-field-900"
-        >
-          <ArrowLeft size={16} aria-hidden="true" />
-          Voltar para o app local
-        </Link>
+        {hasCompletedFirstLogin && (
+          <Link
+            to="/dashboard"
+            className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-field-700 hover:text-field-900"
+          >
+            <ArrowLeft size={16} aria-hidden="true" />
+            Voltar para o app local
+          </Link>
+        )}
 
         <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-soft">
           <div className="mb-6 flex items-center gap-3">
@@ -137,7 +143,9 @@ export function LoginPage() {
           </form>
 
           <p className="mt-5 text-center text-xs leading-5 text-slate-500">
-            Apenas membros autorizados possuem acesso. O uso offline local continua liberado.
+            {hasCompletedFirstLogin
+              ? 'Apenas membros autorizados possuem acesso. O uso offline local continua liberado.'
+              : 'Você deve fazer o login online ao menos uma vez para poder usar o aplicativo offline depois.'}
           </p>
         </section>
       </div>
