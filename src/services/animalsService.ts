@@ -15,7 +15,8 @@ export type UpdateAnimalInput = EntityUpdateInput<Animal>;
 
 async function ensureUniqueIdentification(identification: string, currentId: string) {
   const normalizedIdentification = normalizeIdentifier(identification);
-  const animals = await db.animals.toArray();
+  const activeFarmId = require('./farmContextService').getActiveFarmId();
+  const animals = (await db.animals.toArray()).filter(a => !a.farm_id || a.farm_id === activeFarmId);
   const duplicated = animals.some(
     (animal) =>
       animal.id !== currentId &&
@@ -29,7 +30,8 @@ async function ensureUniqueIdentification(identification: string, currentId: str
 }
 
 async function ensureParentReferences(record: Animal) {
-  const animals = await db.animals.toArray();
+  const activeFarmId = require('./farmContextService').getActiveFarmId();
+  const animals = (await db.animals.toArray()).filter(a => !a.farm_id || a.farm_id === activeFarmId);
   const activeAnimals = animals.filter((animal) => !animal.deleted_at);
 
   if (record.mother_id === record.id) {

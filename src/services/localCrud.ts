@@ -137,7 +137,14 @@ export function createCrudService<T extends LocalEntity>(config: CrudConfig<T>) 
   }
 
   async function list(options: ListOptions = {}) {
-    const records = await config.table.orderBy('updated_at').reverse().toArray();
+    const activeFarmId = getActiveFarmId();
+    let records = await config.table.orderBy('updated_at').reverse().toArray();
+
+    // Filter by farm_id: include records that belong to the active farm
+    // AND records that were created locally without a farm_id
+    records = records.filter(record => 
+      !record.farm_id || record.farm_id === activeFarmId
+    );
 
     if (options.includeDeleted) {
       return records;

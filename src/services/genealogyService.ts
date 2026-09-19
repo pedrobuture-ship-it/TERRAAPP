@@ -26,9 +26,19 @@ export interface CrossSimulationResult {
   heterosisMessage: string;
 }
 
+import { getActiveFarmId } from './farmContextService';
+
 export async function getGenealogyData() {
-  const animals = await db.animals.filter(a => !a.deleted_at).toArray();
-  const semenList = await db.semen.filter(s => !s.deleted_at).toArray();
+  const activeFarmId = getActiveFarmId();
+  
+  const animals = await db.animals
+    .filter(a => !a.deleted_at && (!a.farm_id || a.farm_id === activeFarmId))
+    .toArray();
+    
+  const semenList = await db.semen
+    .filter(s => !s.deleted_at && (!s.farm_id || s.farm_id === activeFarmId))
+    .toArray();
+    
   return { animals, semenList };
 }
 
