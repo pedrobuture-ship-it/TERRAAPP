@@ -119,7 +119,7 @@ async function create(payload: CreateFarmSettingsInput) {
 function roleLabel(role: string) {
   switch (role) {
     case 'owner':
-      return 'LÃ­der / Criador';
+      return 'Líder / Criador';
     case 'admin':
       return 'Administrador';
     default:
@@ -179,7 +179,7 @@ export function SettingsPage() {
       setSettings(currentSettings);
       setForm(toForm(currentSettings));
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'NÃ£o foi possÃ­vel carregar configuraÃ§Ãµes.');
+      setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar configurações.');
     } finally {
       setLoading(false);
     }
@@ -214,7 +214,7 @@ export function SettingsPage() {
         setMembers([]);
       }
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'NÃ£o foi possÃ­vel carregar fazendas online.');
+      setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar fazendas online.');
     } finally {
       setLoadingOnline(false);
     }
@@ -245,7 +245,7 @@ export function SettingsPage() {
       }
 
       if (!payload.farm_name.trim()) {
-        throw new Error('Nome da fazenda Ã© obrigatÃ³rio.');
+        throw new Error('Nome da fazenda é obrigatório.');
       }
 
       if (
@@ -253,7 +253,7 @@ export function SettingsPage() {
         Number.isNaN(payload.app_preferences.low_semen_doses_alert) ||
         Number.isNaN(payload.app_preferences.sanitary_alert_days)
       ) {
-        throw new Error('Informe nÃºmeros vÃ¡lidos nas configuraÃ§Ãµes.');
+        throw new Error('Informe números válidos nas configurações.');
       }
 
       const savedSettings = settings
@@ -266,9 +266,9 @@ export function SettingsPage() {
       
 
 
-      setNotice('ConfiguraÃ§Ãµes da fazenda salvas no banco local.');
+      setNotice('Configurações da fazenda salvas no banco local.');
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'NÃ£o foi possÃ­vel salvar configuraÃ§Ãµes.');
+      setError(submitError instanceof Error ? submitError.message : 'Não foi possível salvar configurações.');
     } finally {
       setSaving(false);
     }
@@ -296,7 +296,7 @@ export function SettingsPage() {
       setNotice('Fazenda online criada e selecionada.');
       setMembers(await listRemoteFarmMembers(farm.id));
     } catch (createError) {
-      setError(createError instanceof Error ? createError.message : 'NÃ£o foi possÃ­vel criar fazenda online.');
+      setError(createError instanceof Error ? createError.message : 'Não foi possível criar fazenda online.');
     } finally {
       setLoadingOnline(false);
     }
@@ -305,7 +305,7 @@ export function SettingsPage() {
   async function handleDeleteRemoteFarm() {
     if (!user || !activeRemoteFarm) return;
 
-    if (!window.confirm(`Tem certeza que deseja EXCLUIR a fazenda online "${activeRemoteFarm.name}"? Esta aÃ§Ã£o nÃ£o pode ser desfeita.`)) {
+    if (!window.confirm(`Tem certeza que deseja EXCLUIR a fazenda online "${activeRemoteFarm.name}"? Esta ação não pode ser desfeita.`)) {
       return;
     }
 
@@ -315,10 +315,10 @@ export function SettingsPage() {
 
     try {
       await deleteRemoteFarm(activeRemoteFarm.id, user.id);
-      setNotice('Fazenda online excluÃ­da com sucesso.');
+      setNotice('Fazenda online excluída com sucesso.');
       await loadOnlineFarms();
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : 'NÃ£o foi possÃ­vel excluir a fazenda online.');
+      setError(deleteError instanceof Error ? deleteError.message : 'Não foi possível excluir a fazenda online.');
     } finally {
       setLoadingOnline(false);
     }
@@ -334,7 +334,7 @@ export function SettingsPage() {
 
     try {
       if (!adminAuthClient) {
-        throw new Error('Supabase não configurado');
+        throw new Error('Supabase n�o configurado');
       }
 
       // 1. Create the user invisibly using the secondary auth client
@@ -358,7 +358,7 @@ export function SettingsPage() {
       setInvitePassword('');
       setMembers(await listRemoteFarmMembers(activeRemoteFarm.id));
     } catch (inviteError) {
-      setError(inviteError instanceof Error ? inviteError.message : 'Não foi possível adicionar o membro.');
+      setError(inviteError instanceof Error ? inviteError.message : 'N�o foi poss�vel adicionar o membro.');
     } finally {
       setLoadingOnline(false);
     }
@@ -375,7 +375,7 @@ export function SettingsPage() {
       setMembers(await listRemoteFarmMembers(activeRemoteFarm.id));
       setNotice('Papel do membro atualizado com sucesso.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'NÃ£o foi possÃ­vel atualizar o membro.');
+      setError(err instanceof Error ? err.message : 'Não foi possível atualizar o membro.');
     } finally {
       setLoadingOnline(false);
     }
@@ -395,7 +395,7 @@ export function SettingsPage() {
       setNotice('Membro removido com sucesso.');
       setMembers(await listRemoteFarmMembers(member.farm_id));
     } catch (removeError) {
-      setError(removeError instanceof Error ? removeError.message : 'NÃ£o foi possÃ­vel remover o membro.');
+      setError(removeError instanceof Error ? removeError.message : 'Não foi possível remover o membro.');
     } finally {
       setLoadingOnline(false);
     }
@@ -414,7 +414,7 @@ export function SettingsPage() {
       try {
         setMembers(await listRemoteFarmMembers(farmId));
       } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : 'NÃ£o foi possÃ­vel carregar membros.');
+        setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar membros.');
       } finally {
         setLoadingOnline(false);
       }
@@ -430,17 +430,17 @@ export function SettingsPage() {
   const isAdmin = currentUserRole === 'admin';
 
   return (
-    <PageShell title="ConfiguraÃ§Ãµes">
-      <div className="mx-auto max-w-4xl space-y-6">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_350px]">
+    <PageShell title="Configurações">
+      <div className="mx-auto max-w-2xl space-y-6">
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-1">
           <div className="space-y-6">
             <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-              <h3 className="text-base font-semibold text-slate-950">ConfiguraÃ§Ãµes do Aplicativo</h3>
+              <h3 className="text-base font-semibold text-slate-950">Configurações do Aplicativo</h3>
               <p className="mt-1 text-sm leading-6 text-slate-600">
-                Essas preferÃªncias afetam apenas como vocÃª vÃª o aplicativo neste dispositivo.
+                Essas preferências afetam apenas como você vê o aplicativo neste dispositivo.
               </p>
               <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                NÃ£o sincronizadas com a nuvem
+                Não sincronizadas com a nuvem
               </p>
               
               <div className="grid gap-4 md:grid-cols-2">
@@ -457,23 +457,23 @@ export function SettingsPage() {
                   <RefreshCw size={20} aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-slate-950">SincronizaÃ§Ã£o Online</h3>
+                  <h3 className="text-base font-semibold text-slate-950">Sincronização Online</h3>
                   <p className="mt-1 text-sm leading-6 text-slate-600">
-                    Conecte o aplicativo a um banco de dados online para acessar de outros dispositivos ou ter backup automÃ¡tico em tempo real.
+                    Conecte o aplicativo a um banco de dados online para acessar de outros dispositivos ou ter backup automático em tempo real.
                   </p>
                 </div>
               </div>
 
               {!isSupabaseConfigured ? (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                  <p className="font-semibold">Supabase nÃ£o configurado.</p>
+                  <p className="font-semibold">Supabase não configurado.</p>
                   <p className="mt-1">
-                    Preencha <code>VITE_SUPABASE_URL</code> e <code>VITE_SUPABASE_ANON_KEY</code> no ambiente para ativar a sincronizaÃ§Ã£o online.
+                    Preencha <code>VITE_SUPABASE_URL</code> e <code>VITE_SUPABASE_ANON_KEY</code> no ambiente para ativar a sincronização online.
                   </p>
                 </div>
               ) : !isOnline ? (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                  Sem internet agora. A seleÃ§Ã£o online fica disponÃ­vel quando a conexÃ£o voltar.
+                  Sem internet agora. A seleção online fica disponível quando a conexão voltar.
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -497,7 +497,7 @@ export function SettingsPage() {
                             </optgroup>
                           )}
                           {participatingFarms.length > 0 && (
-                            <optgroup label="Fazendas que vocÃª Ã© participante">
+                            <optgroup label="Fazendas que você é participante">
                               {participatingFarms.map((farm) => (
                                 <option key={farm.id} value={farm.id}>{farm.name}</option>
                               ))}
@@ -518,7 +518,7 @@ export function SettingsPage() {
                         <input
                           value={newFarmName}
                           onChange={(event) => setNewFarmName(event.target.value)}
-                          placeholder="SÃ­tio Boa Vista"
+                          placeholder="Sítio Boa Vista"
                           className="h-11 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-field-600 focus:ring-2 focus:ring-field-100"
                         />
                         <button
@@ -542,7 +542,7 @@ export function SettingsPage() {
                           {activeRemoteFarm.name}
                         </div>
                         <p className="mt-1">
-                          Esta Ã© a fazenda ativa para os prÃ³ximos envios e baixas do Supabase.
+                          Esta é a fazenda ativa para os próximos envios e baixas do Supabase.
                         </p>
                       </div>
                       {isOwner && (
@@ -628,7 +628,7 @@ export function SettingsPage() {
                           <div key={member.id} className="flex items-center justify-between p-3 text-sm">
                             <div>
                               <p className="font-semibold text-slate-950">
-                                {isSelf ? user?.email ?? 'VocÃª' : member.email || member.user_id}
+                                {isSelf ? user?.email ?? 'Você' : member.email || member.user_id}
                               </p>
                               <div className="mt-1 flex items-center gap-2 text-slate-500">
                                 {isOwner && !isLeader && !isSelf ? (
@@ -644,7 +644,7 @@ export function SettingsPage() {
                                 ) : (
                                   <span>{roleLabel(member.role)}</span>
                                 )}
-                                <span>â€¢ desde {formatDatePtBr(member.created_at)}</span>
+                                <span>• desde {formatDatePtBr(member.created_at)}</span>
                               </div>
                             </div>
                             {canRemove && (
@@ -696,7 +696,7 @@ export function SettingsPage() {
 
       {loading ? (
         <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-500">
-          Carregando configuraÃ§Ãµes locais...
+          Carregando configurações locais...
         </div>
       ) : null}
     </PageShell>
