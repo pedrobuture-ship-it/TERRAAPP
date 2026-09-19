@@ -516,7 +516,8 @@ async function pushRecord(
         .single();
 
   if (response.error) {
-    throw response.error;
+    const pgErr = response.error as any;
+    throw new Error(pgErr?.message || pgErr?.details || pgErr?.hint || 'Erro ao enviar registro para o Supabase');
   }
 
   const remote = response.data as RemoteRow;
@@ -542,35 +543,58 @@ async function pushLocalChanges(farmId: string, userId: string, summary: SyncSum
   let context = await buildSyncContext();
 
   for (const config of syncTables) {
-    const records = (await config.table.toArray()).filter((record) => {
+    let records = (await config.table.toArray()).filter((record) => {
       const needsSync = record.sync_status !== 'synced' || !record.remote_id || !record.farm_id;
       const belongsToSelectedFarm = !record.farm_id || record.farm_id === farmId;
-
       return needsSync && belongsToSelectedFarm;
     });
 
-    for (const record of records) {
-      try {
-        const result = await pushRecord(config, record, farmId, userId, context);
+    // Multiple passes: retry records that failed due to pending relations
+    // (e.g. calf created offline that references its mother, also created offline)
+    const MAX_PASSES = 5;
+    for (let pass = 0; pass < MAX_PASSES && records.length > 0; pass++) {
+      const stillPending: typeof records = [];
 
-        if (result === 'pushed') {
-          summary.pushed += 1;
-        } else if (result === 'conflict_remote') {
-          summary.conflictsResolved += 1;
-          summary.pulled += 1;
-        } else {
-          summary.skipped += 1;
+      for (const record of records) {
+        try {
+          const result = await pushRecord(config, record, farmId, userId, context);
+
+          if (result === 'pushed') {
+            summary.pushed += 1;
+            context = await buildSyncContext(); // refresh so next records see the newly synced remote_id
+          } else if (result === 'conflict_remote') {
+            summary.conflictsResolved += 1;
+            summary.pulled += 1;
+            context = await buildSyncContext();
+          } else {
+            summary.skipped += 1;
+          }
+        } catch (error: any) {
+          const msg: string = error?.message || 'erro ao enviar registro';
+          // If the error is a pending-relation error, defer to next pass
+          if (msg.includes('Relação pendente de sincronização')) {
+            stillPending.push(record);
+          } else {
+            summary.errors.push(`${config.localName}: ${msg}`);
+          }
         }
-      } catch (error) {
-        summary.errors.push(
-          `${config.localName}: ${error instanceof Error ? error.message : 'erro ao enviar registro'}`,
-        );
       }
-    }
 
-    context = await buildSyncContext();
+      // If no record moved out of stillPending, no more progress – report errors and stop
+      if (stillPending.length === records.length) {
+        for (const record of stillPending) {
+          summary.errors.push(
+            `${config.localName}: Não foi possível enviar o registro pois suas relações ainda não foram sincronizadas.`,
+          );
+        }
+        break;
+      }
+
+      records = stillPending;
+    }
   }
 }
+
 
 async function pullRemoteChanges(farmId: string, summary: SyncSummary) {
   let context = await buildSyncContext();

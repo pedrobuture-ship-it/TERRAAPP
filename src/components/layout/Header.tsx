@@ -1,4 +1,4 @@
-import { Building2, LogIn, LogOut, UserCircle, WifiOff } from 'lucide-react';
+import { Building2, LogIn, LogOut, RefreshCw, UserCircle, WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -29,6 +29,16 @@ export function Header({ title }: HeaderProps) {
     }
   }
 
+  async function forceUpdate() {
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        await registration.unregister();
+      }
+    }
+    window.location.reload();
+  }
+
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur md:px-6">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
@@ -46,6 +56,14 @@ export function Header({ title }: HeaderProps) {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          <button
+            onClick={forceUpdate}
+            className="hidden items-center gap-2 rounded-full border border-red-200 bg-red-100 px-3 py-2 text-sm font-medium text-red-700 sm:inline-flex hover:bg-red-200"
+          >
+            <RefreshCw size={16} aria-hidden="true" />
+            FORÇAR ATUALIZAÇÃO
+          </button>
+          
           <span className="hidden items-center gap-2 rounded-full border border-field-100 bg-field-50 px-3 py-2 text-sm font-medium text-field-700 sm:inline-flex">
             <WifiOff size={16} aria-hidden="true" />
             {isOnline ? 'Offline-first' : 'Sem internet'}
