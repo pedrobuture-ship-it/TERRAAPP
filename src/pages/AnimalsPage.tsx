@@ -5,6 +5,7 @@ import { AnimalForm, type AnimalFormPayload } from '../components/animals/Animal
 import { AnimalList } from '../components/animals/AnimalList';
 import { AnimalHistoryModal } from '../components/animals/AnimalHistoryModal';
 import { PageShell } from '../components/layout/PageShell';
+import { BatchMoveModal } from '../components/animals/BatchMoveModal';
 import * as animalsService from '../services/animalsService';
 import * as lotsService from '../services/lotsService';
 import * as semenService from '../services/semenService';
@@ -29,6 +30,30 @@ export function AnimalsPage() {
     lot: '',
     status: '',
   });
+
+  const [selectedAnimalIds, setSelectedAnimalIds] = useState<string[]>([]);
+  const [batchMoveModalOpen, setBatchMoveModalOpen] = useState(false);
+
+  function handleToggleSelect(id: string) {
+    setSelectedAnimalIds(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  }
+
+  function handleToggleSelectAll() {
+    if (selectedAnimalIds.length === filteredAnimals.length && filteredAnimals.length > 0) {
+      setSelectedAnimalIds([]);
+    } else {
+      setSelectedAnimalIds(filteredAnimals.map(a => a.id));
+    }
+  }
+
+  async function handleBatchMove(lotId: string) {
+    const promises = selectedAnimalIds.map(id => animalsService.update(id, { lot_id: lotId }));
+    await Promise.all(promises);
+    await loadAnimals();
+    setSelectedAnimalIds([]);
+  }
 
   async function loadAnimals() {
     setLoading(true);
@@ -278,13 +303,37 @@ export function AnimalsPage() {
 
       <AnimalFilters filters={filters} lots={lotOptions} onChange={setFilters} onClear={clearFilters} />
 
+      {selectedAnimalIds.length > 0 && (
+        <div className="flex items-center justify-between p-3 bg-field-50 border border-field-200 rounded-lg mb-4">
+          <span className="text-sm font-semibold text-field-800">
+            {selectedAnimalIds.length} {selectedAnimalIds.length === 1 ? 'animal selecionado' : 'animais selecionados'}
+          </span>
+          <button
+            onClick={() => setBatchMoveModalOpen(true)}
+            className="px-4 py-2 bg-field-600 text-white rounded-md text-sm font-medium hover:bg-field-700 transition"
+          >
+            Mover de Lote
+          </button>
+        </div>
+      )}
+
       <AnimalList
+        selectedAnimalIds={selectedAnimalIds}
+        onToggleSelect={handleToggleSelect}
+        onToggleSelectAll={handleToggleSelectAll}
         animals={filteredAnimals}
         loading={loading}
         getLotLabel={getLotLabel}
         onEdit={openEditForm}
         onDelete={handleDelete}
         onHistoryClick={setHistoryAnimal}
+      />
+      <BatchMoveModal
+        isOpen={batchMoveModalOpen}
+        onClose={() => setBatchMoveModalOpen(false)}
+        onConfirm={handleBatchMove}
+        lots={lots}
+        selectedCount={selectedAnimalIds.length}
       />
     </PageShell>
   );

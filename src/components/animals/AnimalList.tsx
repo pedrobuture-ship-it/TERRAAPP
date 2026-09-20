@@ -8,6 +8,9 @@ import type { Animal } from '../../types';
 import { formatDatePtBr, formatWeightKg } from '../../utils/format';
 
 interface AnimalListProps {
+  selectedAnimalIds?: string[];
+  onToggleSelect?: (id: string) => void;
+  onToggleSelectAll?: () => void;
   animals: Animal[];
   loading?: boolean;
   getLotLabel?: (lotId?: string) => string;
@@ -74,7 +77,7 @@ function ActionButtons({
   );
 }
 
-export function AnimalList({ animals, loading, getLotLabel, onEdit, onDelete, onHistoryClick }: AnimalListProps) {
+export function AnimalList({ animals, loading, getLotLabel, onEdit, onDelete, onHistoryClick, selectedAnimalIds = [], onToggleSelect, onToggleSelectAll }: AnimalListProps) {
   if (loading) {
     return (
       <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-sm">
@@ -100,7 +103,7 @@ export function AnimalList({ animals, loading, getLotLabel, onEdit, onDelete, on
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left font-semibold text-slate-600">Brinco</th>
+              <th className="px-4 py-3 text-left w-12"><input type="checkbox" checked={selectedAnimalIds.length === animals.length && animals.length > 0} onChange={onToggleSelectAll} className="rounded border-slate-300 text-field-600 focus:ring-field-600" /></th><th className="px-4 py-3 text-left font-semibold text-slate-600">Brinco</th>
               <th className="px-4 py-3 text-left font-semibold text-slate-600">Animal</th>
               <th className="px-4 py-3 text-left font-semibold text-slate-600">Categoria</th>
               <th className="px-4 py-3 text-left font-semibold text-slate-600">Sexo</th>
@@ -113,7 +116,7 @@ export function AnimalList({ animals, loading, getLotLabel, onEdit, onDelete, on
           <tbody className="divide-y divide-slate-100">
             {animals.map((animal) => (
               <tr key={animal.id} className="align-top">
-                <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-950">
+                <td className="px-4 py-3"><input type="checkbox" checked={selectedAnimalIds.includes(animal.id)} onChange={() => onToggleSelect && onToggleSelect(animal.id)} className="rounded border-slate-300 text-field-600 focus:ring-field-600 cursor-pointer" /></td><td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-950">
                   {animal.identification}
                 </td>
                 <td className="px-4 py-3">
@@ -148,16 +151,21 @@ export function AnimalList({ animals, loading, getLotLabel, onEdit, onDelete, on
         {animals.map((animal) => (
           <article key={animal.id} className="p-4">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-field-700">
-                  {animal.identification}
-                </p>
-                <h3 className="mt-1 truncate text-base font-semibold text-slate-950">
-                  {animal.name || animal.breed || 'Animal sem nome'}
-                </h3>
-                <p className="mt-1 text-sm text-slate-500">
-                  {getAnimalCategoryLabel(animal.category)} · {getAnimalSexLabel(animal.sex)}
-                </p>
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="pt-0.5">
+                  <input type="checkbox" checked={selectedAnimalIds.includes(animal.id)} onChange={() => onToggleSelect && onToggleSelect(animal.id)} className="rounded border-slate-300 text-field-600 focus:ring-field-600 w-5 h-5 cursor-pointer" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-field-700">
+                    {animal.identification}
+                  </p>
+                  <h3 className="mt-1 truncate text-base font-semibold text-slate-950">
+                    {animal.name || animal.breed || 'Animal sem nome'}
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {getAnimalCategoryLabel(animal.category)} • {getAnimalSexLabel(animal.sex)}
+                  </p>
+                </div>
               </div>
               <StatusBadge animal={animal} />
             </div>
