@@ -299,7 +299,7 @@ function buildAlerts(
         severity: 'danger',
         route: '/manejo-sanitario',
       });
-    } else if (status === 'pending' && isDateWithinNextDays(nextDate, 15, today)) {
+    } else if (isDateWithinNextDays(nextDate, 15, today)) {
       alerts.push({
         id: `sanitary-upcoming-${record.id}`,
         title: record.procedure_type === 'vaccine' ? 'Vacina próxima' : 'Vermífugo próximo',
