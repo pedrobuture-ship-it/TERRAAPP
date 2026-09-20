@@ -32,6 +32,7 @@ function matrixLabel(animals: Animal[], animalId: string) {
 
 interface CalfInput {
   identification: string;
+  name: string;
   sex: AnimalSex;
   status: CalfStatus;
   weight_kg: string;
@@ -51,7 +52,7 @@ const emptyForm: BirthFormState = {
   birth_date: todayDateString(),
   birth_type: 'normal',
   calf_count: '1',
-  calves: [{ identification: '', sex: 'male', status: 'alive', weight_kg: '' }],
+  calves: [{ identification: '', name: '', sex: 'male', status: 'alive', weight_kg: '' }],
   notes: '',
 };
 
@@ -65,6 +66,7 @@ function birthToForm(birth?: Birth | null): BirthFormState {
   for (let i = 0; i < count; i++) {
     calves.push({
       identification: idents[i] || '',
+      name: '',
       sex: birth.calf_sex ?? 'male',
       status: birth.calf_status ?? 'alive',
       weight_kg: birth.birth_weight_kg ? String(birth.birth_weight_kg / count) : '',
@@ -167,7 +169,7 @@ export function BirthsPage() {
         const count = parseInt(value as string) || 1;
         const newCalves = [...current.calves];
         while (newCalves.length < count) {
-          newCalves.push({ identification: '', sex: 'male', status: 'alive', weight_kg: '' });
+          newCalves.push({ identification: '', name: '', sex: 'male', status: 'alive', weight_kg: '' });
         }
         if (newCalves.length > count) {
           newCalves.splice(count);
@@ -328,6 +330,7 @@ export function BirthsPage() {
           for (const calfInput of calvesToCreate) {
             const newCalf = await animalsService.create({
               identification: calfInput.identification.trim(),
+              name: calfInput.name.trim(),
               sex: calfInput.sex,
               category: 'calf',
               status: 'active',
