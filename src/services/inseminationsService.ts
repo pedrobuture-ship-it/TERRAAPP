@@ -58,7 +58,9 @@ function prepareInsemination(record: Insemination): Insemination {
 
 async function validateInsemination(record: Insemination) {
   assertRequiredText(record.animal_id, 'Matriz');
-  assertRequiredText(record.semen_id, 'Touro ou sêmen');
+  if (!record.semen_id && !record.bull_id) {
+    throw new Error('Touro ou sêmen é obrigatório.');
+  }
   assertPastOrTodayDate(record.date, 'Data da inseminação');
   assertRequiredText(record.type, 'Tipo de inseminação');
   assertRequiredText(record.status, 'Status');
