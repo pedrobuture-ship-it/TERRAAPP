@@ -54,7 +54,7 @@ export function LoginPage() {
     try {
       await signIn(email.trim(), password);
       setNotice('Login realizado com sucesso.');
-      navigate('/dashboard');
+      navigate('/tarefas');
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Não foi possível concluir a operação.');
     } finally {
@@ -67,7 +67,7 @@ export function LoginPage() {
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-md flex-col justify-center">
         {hasCompletedFirstLogin && (
           <Link
-            to="/dashboard"
+            to="/tarefas"
             className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-field-700 hover:text-field-900"
           >
             <ArrowLeft size={16} aria-hidden="true" />
