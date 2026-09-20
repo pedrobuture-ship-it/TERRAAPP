@@ -43,8 +43,8 @@ export const appRoutes: AppRouteDefinition[] = [
   {
     id: 'tarefas',
     path: '/tarefas',
-    label: 'Tarefas (Kanban)',
-    shortLabel: 'Tarefas',
+    label: 'Kanban',
+    shortLabel: 'Kanban',
     icon: KanbanSquare,
     Component: TasksKanbanPage,
   },
