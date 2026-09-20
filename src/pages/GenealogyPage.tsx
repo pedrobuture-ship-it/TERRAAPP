@@ -155,13 +155,12 @@ export function GenealogyPage() {
         <div className="flex flex-col gap-6">
           <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Fêmea (Matriz / Novilha)</label>
               <select
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
                 value={selectedFemale}
                 onChange={(e) => setSelectedFemale(e.target.value)}
               >
-                <option value="">-- Selecione a Fêmea --</option>
+                <option value="">Fêmea (Matriz / Novilha)</option>
                 {animals.filter(a => a.sex === 'female' || a.category === 'matrix' || a.category === 'heifer').map(a => (
                   <option key={a.id} value={a.id}>
                     {a.identification} {a.name ? `- ${a.name}` : ''}
@@ -170,13 +169,12 @@ export function GenealogyPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Macho (Touro / Sêmen)</label>
               <select
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
                 value={selectedMale}
                 onChange={(e) => setSelectedMale(e.target.value)}
               >
-                <option value="">-- Selecione o Macho --</option>
+                <option value="">Macho (Touro / Sêmen)</option>
                 <optgroup label="Touros do Rebanho">
                   {animals.filter(a => a.sex === 'male' || a.category === 'bull').map(a => (
                     <option key={a.id} value={a.id}>
