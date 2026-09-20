@@ -27,7 +27,7 @@ import { SettingsPage } from '../pages/SettingsPage';
 import { GenealogyPage } from '../pages/GenealogyPage';
 
 import { TasksKanbanPage } from '../pages/TasksKanbanPage';
-import { KanbanSquare } from 'lucide-react';
+import { Home } from 'lucide-react';
 
 
 export const appRoutes: AppRouteDefinition[] = [
@@ -36,7 +36,7 @@ export const appRoutes: AppRouteDefinition[] = [
     path: '/tarefas',
     label: 'Kanban',
     shortLabel: 'Kanban',
-    icon: KanbanSquare,
+    icon: Home,
     Component: TasksKanbanPage,
   },
   {
