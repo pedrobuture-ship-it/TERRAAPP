@@ -5,6 +5,7 @@ import { tasksService } from '../../services/tasksService';
 import { TaskModal } from './TaskModal';
 
 interface TaskCardProps {
+  membersMap: Record<string, string>;
   task: Task;
   onTasksChange: () => void;
 }
@@ -15,7 +16,7 @@ const PRIORITY_COLORS: Record<string, string> = {
   Alta: 'bg-red-500',
 };
 
-export function TaskCard({ task, onTasksChange }: TaskCardProps) {
+export function TaskCard({ task, onTasksChange, membersMap }: TaskCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -58,13 +59,22 @@ export function TaskCard({ task, onTasksChange }: TaskCardProps) {
           </div>
         )}
 
-        <div className="mt-3 flex items-center gap-2">
-          <div
-            className={`w-3 h-3 rounded-full ${PRIORITY_COLORS[task.priority] || 'bg-slate-500'}`}
-            title={`Prioridade: ${task.priority}`}
-          />
-          <span className="text-xs text-slate-500 font-medium">Prioridade {task.priority}</span>
+        
+        <div className="mt-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div
+              className={`w-3 h-3 rounded-full ${PRIORITY_COLORS[task.priority] || 'bg-slate-500'}`}
+              title={`Prioridade: ${task.priority}`}
+            />
+            <span className="text-xs text-slate-500 font-medium">{task.priority}</span>
+          </div>
+          {task.assigned_to && membersMap[task.assigned_to] && (
+            <span className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-1 rounded">
+              {membersMap[task.assigned_to]}
+            </span>
+          )}
         </div>
+
       </div>
 
       {isModalOpen && (

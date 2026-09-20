@@ -6,6 +6,8 @@ import type { Task } from '../types';
 import { RefreshCw, Plus, CloudUpload, CloudDownload } from 'lucide-react';
 import { runSync, getSelectedFarmId, type SyncMode } from '../services/syncService';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
+
 import { TaskModal } from '../components/kanban/TaskModal';
 
 export function TasksKanbanPage() {
@@ -13,6 +15,31 @@ export function TasksKanbanPage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { session } = useAuth();
+  const [membersMap, setMembersMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    loadMembers();
+  }, []);
+
+  async function loadMembers() {
+    try {
+      const farmId = getSelectedFarmId();
+      if (!farmId) return;
+      const { data, error } = await supabase!.rpc('get_farm_members_with_email', {
+        target_farm_id: farmId
+      });
+      if (!error && data) {
+        const map: Record<string, string> = {};
+        data.forEach((m: any) => {
+          map[m.user_id] = m.email.split('@')[0];
+        });
+        setMembersMap(map);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
 
   useEffect(() => {
     loadTasks();
@@ -82,7 +109,7 @@ export function TasksKanbanPage() {
       </div>
 
       <div className="flex-1 overflow-x-auto pb-4">
-        <KanbanBoard tasks={tasks} onTasksChange={loadTasks} />
+        <KanbanBoard tasks={tasks} onTasksChange={loadTasks} membersMap={membersMap} />
       </div>
 
       <TaskModal
