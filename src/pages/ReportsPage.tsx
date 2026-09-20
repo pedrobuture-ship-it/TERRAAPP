@@ -126,14 +126,7 @@ export function ReportsPage() {
         </button>
       </div>
 
-      {summary ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <SummaryCard label="Animais" value={summary.animals} />
-          <SummaryCard label="Matrizes" value={summary.matrices} />
-          <SummaryCard label="Inseminações" value={summary.inseminations} />
-          <SummaryCard label="Partos" value={summary.births} />
-        </div>
-      ) : null}
+      
 
       {notice ? (
         <div className="rounded-lg border border-field-100 bg-field-50 px-4 py-3 text-sm font-medium text-field-700">
@@ -154,9 +147,7 @@ export function ReportsPage() {
           </div>
           <div>
             <h3 className="text-base font-semibold text-slate-950">Exportar CSV</h3>
-            <p className="mt-1 text-sm leading-6 text-slate-600">
-              Arquivos separados por ponto e vírgula, com BOM UTF-8 para abrir bem em planilhas.
-            </p>
+            
           </div>
         </div>
 
@@ -183,9 +174,7 @@ export function ReportsPage() {
           </div>
           <div>
             <h3 className="text-base font-semibold text-slate-950">Gerar PDF</h3>
-            <p className="mt-1 text-sm leading-6 text-slate-600">
-              PDFs simples e locais, úteis para salvar, imprimir ou compartilhar fora do app.
-            </p>
+            
           </div>
         </div>
 
