@@ -1,4 +1,5 @@
 import { Building2, LogIn, LogOut, RefreshCw, UserCircle, Wifi, WifiOff } from 'lucide-react';
+import { NotificationsBell } from './NotificationsBell';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -60,6 +61,7 @@ export function Header({ title }: HeaderProps) {
           </span>
           {user ? (
             <div className="flex items-center gap-2">
+              <NotificationsBell />
               <span
                 className="hidden max-w-[14rem] items-center gap-2 truncate rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm md:inline-flex"
                 title={user.email ?? 'Usuário logado'}

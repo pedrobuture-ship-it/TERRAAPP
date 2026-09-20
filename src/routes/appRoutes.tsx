@@ -18,7 +18,6 @@ import { AnimalsPage } from '../pages/AnimalsPage';
 import { BackupPage } from '../pages/BackupPage';
 import { BirthsPage } from '../pages/BirthsPage';
 import { BullsSemenPage } from '../pages/BullsSemenPage';
-import { DashboardPage } from '../pages/DashboardPage';
 import { HealthManagementPage } from '../pages/HealthManagementPage';
 import { InseminationsPage } from '../pages/InseminationsPage';
 import { LotsPaddocksPage } from '../pages/LotsPaddocksPage';
@@ -32,14 +31,6 @@ import { KanbanSquare } from 'lucide-react';
 
 
 export const appRoutes: AppRouteDefinition[] = [
-  {
-    id: 'dashboard',
-    path: '/dashboard',
-    label: 'Dashboard',
-    shortLabel: 'Início',
-    icon: Gauge,
-    Component: DashboardPage,
-  },
   {
     id: 'tarefas',
     path: '/tarefas',

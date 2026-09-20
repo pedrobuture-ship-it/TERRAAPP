@@ -12,7 +12,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/cadastro" element={<Navigate to="/login" replace />} />
         <Route element={<AppLayout />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route index element={<Navigate to="/tarefas" replace />} />
           {appRoutes.map((route) => (
             <Route key={route.path} path={route.path.slice(1)} element={<route.Component />} />
           ))}
