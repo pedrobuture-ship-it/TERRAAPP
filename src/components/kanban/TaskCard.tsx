@@ -29,11 +29,13 @@ export function TaskCard({ task, onTasksChange, membersMap, isAdmin }: TaskCardP
     }
   }
 
+  const createdDate = task.created_at ? new Date(task.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '';
+
   return (
     <>
       <div
         onClick={() => setIsModalOpen(true)}
-        className="bg-white p-3 rounded-md shadow-sm border border-slate-200 cursor-pointer hover:shadow-md transition-shadow relative"
+        className="bg-white p-3 rounded-md shadow-sm border border-slate-200 cursor-pointer hover:shadow-md transition-shadow relative flex flex-col gap-1"
       >
         <div className="flex justify-between items-start gap-2">
           <h4 className="font-medium text-slate-800 line-clamp-2">{task.title}</h4>
@@ -61,13 +63,14 @@ export function TaskCard({ task, onTasksChange, membersMap, isAdmin }: TaskCardP
         )}
 
         
-        <div className="mt-3 flex items-center justify-between">
+        <div className="mt-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div
               className={`w-3 h-3 rounded-full ${PRIORITY_COLORS[task.priority] || 'bg-slate-500'}`}
               title={`Prioridade: ${task.priority}`}
             />
-            <span className="text-xs text-slate-500 font-medium">{task.priority}</span>
+            <span className="text-[10px] text-slate-500 font-medium">{task.priority}</span>
+            {createdDate && <span className="text-[10px] text-slate-400 border-l border-slate-200 pl-2">Criado: {createdDate}</span>}
           </div>
           {task.assigned_to && membersMap[task.assigned_to] && (
             <span className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-1 rounded">

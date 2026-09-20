@@ -23,9 +23,16 @@ export function TasksKanbanPage() {
   }, []);
 
   async function loadMembers() {
+    const farmId = getSelectedFarmId();
+    if (!farmId) return;
+
+    // Load from cache first for immediate offline support
+    const cachedMap = localStorage.getItem(`membersMap_${farmId}`);
+    const cachedAdmin = localStorage.getItem(`isAdmin_${farmId}`);
+    if (cachedMap) setMembersMap(JSON.parse(cachedMap));
+    if (cachedAdmin) setIsAdmin(JSON.parse(cachedAdmin));
+
     try {
-      const farmId = getSelectedFarmId();
-      if (!farmId) return;
       const { data, error } = await supabase!.rpc('get_farm_members_with_email', {
         target_farm_id: farmId
       });
@@ -40,9 +47,11 @@ export function TasksKanbanPage() {
         });
         setMembersMap(map);
         setIsAdmin(adminFound);
+        localStorage.setItem(`membersMap_${farmId}`, JSON.stringify(map));
+        localStorage.setItem(`isAdmin_${farmId}`, JSON.stringify(adminFound));
       }
     } catch (err) {
-      console.error(err);
+      console.warn('Offline or error loading members, using cached names');
     }
   }
 
