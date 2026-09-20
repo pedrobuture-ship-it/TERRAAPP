@@ -21,6 +21,7 @@ interface InseminationFormState {
   animal_id: string;
   date: string;
   semen_id: string;
+  bull_id: string;
   technician: string;
   protocol: string;
   type: InseminationType;
@@ -32,6 +33,7 @@ const emptyForm: InseminationFormState = {
   animal_id: '',
   date: todayDateString(),
   semen_id: '',
+  bull_id: '',
   technician: '',
   protocol: '',
   type: 'iatf',
@@ -60,8 +62,9 @@ function inseminationToForm(insemination?: Insemination | null): InseminationFor
 
   return {
     animal_id: insemination.animal_id,
-    date: insemination.date,
-    semen_id: insemination.semen_id ?? '',
+      date: insemination.date,
+      semen_id: insemination.semen_id ?? '',
+      bull_id: insemination.bull_id ?? '',
     technician: insemination.technician ?? '',
     protocol: insemination.protocol ?? '',
     type: insemination.type ?? 'iatf',
@@ -80,18 +83,14 @@ function getMatrixLabel(animals: Animal[], animalId: string) {
   return `${animal.identification}${animal.name ? ` - ${animal.name}` : ''}`;
 }
 
-function getSemenLabel(semenRecords: Semen[], semenId?: string) {
-  if (!semenId) {
-    return 'Não informado';
+function getFatherLabel(semenRecords: Semen[], animals: Animal[], semenId?: string, bullId?: string) {
+  if (bullId) {
+    const bull = animals.find((item) => item.id === bullId);
+    return bull ? `Touro: ${bull.identification} ${bull.name ? `- ${bull.name}` : ''}` : 'Touro não encontrado';
   }
-
+  if (!semenId) return 'Nenhum reprodutor informado';
   const semen = semenRecords.find((item) => item.id === semenId);
-
-  if (!semen) {
-    return 'Sêmen não encontrado';
-  }
-
-  return `${semen.bull_name}${semen.breed ? ` · ${semen.breed}` : ''}`;
+  return semen ? `Sêmen: ${semen.bull_name} ${semen.breed ? `- ${semen.breed}` : ''}` : 'Sêmen não encontrado';
 }
 
 function getLotLabel(lots: Lot[], lotId?: string) {
@@ -232,8 +231,8 @@ export function InseminationsPage() {
       return;
     }
 
-    if (!form.semen_id) {
-      setError('Selecione um touro ou sêmen.');
+    if (!form.semen_id && !form.bull_id) {
+      setError('Selecione um sêmen ou um touro do rebanho.');
       setSaving(false);
       return;
     }
@@ -251,9 +250,10 @@ export function InseminationsPage() {
     }
 
     const payload = {
-      animal_id: form.animal_id,
-      date: form.date,
-      semen_id: form.semen_id,
+        animal_id: form.animal_id,
+        date: form.date,
+        semen_id: form.semen_id || undefined,
+        bull_id: form.bull_id || undefined,
       technician: cleanText(form.technician),
       protocol: cleanText(form.protocol),
       type: form.type,
@@ -425,27 +425,75 @@ export function InseminationsPage() {
               />
             </label>
 
-            <label className="block">
-              <span className="text-sm font-medium text-slate-700">Touro/sêmen utilizado</span>
-              <select
-                value={form.semen_id}
-                onChange={(event) => updateForm('semen_id', event.target.value)}
-                className="mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-field-600 focus:ring-2 focus:ring-field-100"
-              >
-                <option value="">Selecione</option>
-                {semenRecords.map((semen) => {
-                  const doses = semen.doses_available ?? semen.quantity ?? 0;
-                  const isCurrent = editingInsemination?.semen_id === semen.id;
-                  const disabled = doses <= 0 && !isCurrent;
+            <div className="block">
+                <span className="text-sm font-medium text-slate-700">Reprodutor utilizado</span>
+                <div className="mt-2 flex gap-4">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="fatherType" 
+                      checked={form.semen_id !== '' || (form.semen_id === '' && form.bull_id === '')} 
+                      onChange={() => { updateForm('semen_id', ''); updateForm('bull_id', ''); }} 
+                      className="text-field-600 focus:ring-field-600"
+                    />
+                    Sêmen (Estoque)
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="fatherType" 
+                      checked={form.bull_id !== ''} 
+                      onChange={() => { updateForm('semen_id', ''); updateForm('bull_id', 'pending'); }} 
+                      className="text-field-600 focus:ring-field-600"
+                    />
+                    Touro (Rebanho)
+                  </label>
+                </div>
+                
+                {form.bull_id === '' ? (
+                  <select
+                    value={form.semen_id}
+                    onChange={(event) => updateForm('semen_id', event.target.value)}
+                    className="mt-3 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-field-600 focus:ring-2 focus:ring-field-100"
+                  >
+                    <option value="">Selecione o sêmen</option>
+                    {semenRecords.map((semen) => {
+                      const doses = semen.doses_available ?? semen.quantity ?? 0;
+                      const isCurrent = editingInsemination?.semen_id === semen.id;
+                      const disabled = doses <= 0 && !isCurrent;
 
-                  return (
-                    <option key={semen.id} value={semen.id} disabled={disabled}>
-                      {semen.bull_name} · {doses} dose(s){disabled ? ' - estoque zerado' : ''}
-                    </option>
-                  );
-                })}
-              </select>
-            </label>
+                      return (
+                        <option key={semen.id} value={semen.id} disabled={disabled}>
+                          {semen.bull_name} {semen.code ? `(${semen.code})` : ''} - ${doses} doses
+                        </option>
+                      );
+                    })}
+                    {editingInsemination &&
+                    editingInsemination.semen_id &&
+                    !semenRecords.some((s) => s.id === editingInsemination.semen_id) ? (
+                      <option value={editingInsemination.semen_id}>Sêmen não encontrado</option>
+                    ) : null}
+                  </select>
+                ) : (
+                  <select
+                    value={form.bull_id === 'pending' ? '' : form.bull_id}
+                    onChange={(event) => updateForm('bull_id', event.target.value)}
+                    className="mt-3 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-field-600 focus:ring-2 focus:ring-field-100"
+                  >
+                    <option value="">Selecione o touro</option>
+                    {animals.filter(a => a.category === 'bull' && a.status === 'active').map((bull) => (
+                      <option key={bull.id} value={bull.id}>
+                        {bull.identification} {bull.name ? `- ${bull.name}` : ''}
+                      </option>
+                    ))}
+                    {editingInsemination &&
+                    editingInsemination.bull_id &&
+                    !animals.some((a) => a.id === editingInsemination.bull_id) ? (
+                      <option value={editingInsemination.bull_id}>Touro não encontrado</option>
+                    ) : null}
+                  </select>
+                )}
+              </div>
 
             <label className="block">
               <span className="text-sm font-medium text-slate-700">Inseminador responsável</span>
@@ -561,7 +609,7 @@ export function InseminationsPage() {
                       {getMatrixLabel(animals, insemination.animal_id)}
                     </h3>
                     <p className="mt-1 text-sm text-slate-500">
-                      {getSemenLabel(semenRecords, insemination.semen_id)}
+                      {getFatherLabel(semenRecords, animals, insemination.semen_id, insemination.bull_id)}
                     </p>
                   </div>
 
