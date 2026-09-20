@@ -622,7 +622,7 @@ export function SettingsPage() {
                       {members.map((member) => {
                         const isSelf = member.user_id === user?.id;
                         const isLeader = member.role === 'owner';
-                        const canRemove = isSelf ? !isLeader : ((isOwner || isAdmin) && !isLeader);
+                        const canRemove = !isSelf && ((isOwner || isAdmin) && !isLeader);
 
                         return (
                           <div key={member.id} className="flex items-center justify-between p-3 text-sm">
