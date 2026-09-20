@@ -8,6 +8,7 @@ interface KanbanBoardProps {
   membersMap: Record<string, string>;
   isAdmin: boolean;
   tasks: Task[];
+  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   onTasksChange: () => void;
 }
 
@@ -18,7 +19,7 @@ const COLUMNS = [
   { id: 'done', title: 'Feito' },
 ];
 
-export function KanbanBoard({ tasks, onTasksChange, membersMap, isAdmin }: KanbanBoardProps) {
+export function KanbanBoard({ tasks, setTasks, onTasksChange, membersMap, isAdmin }: KanbanBoardProps) {
   async function handleDragEnd(result: DropResult) {
     if (!result.destination) return;
 
@@ -52,20 +53,24 @@ export function KanbanBoard({ tasks, onTasksChange, membersMap, isAdmin }: Kanba
       newPosition = ((prevTask?.position || 0) + (nextTask?.position || 0)) / 2;
     }
 
-    // Optimistic UI update
-    task.status = destination.droppableId;
-    task.position = newPosition;
-    onTasksChange(); // to trigger re-render optimistically while saving
+    // Optimistic UI update (synchronous state update)
+    setTasks((prevTasks) => {
+      const newTasks = [...prevTasks];
+      const taskIndex = newTasks.findIndex(t => t.id === draggableId);
+      if (taskIndex !== -1) {
+         newTasks[taskIndex] = { ...newTasks[taskIndex], status: destination.droppableId, position: newPosition };
+      }
+      return newTasks;
+    });
 
     try {
       await tasksService.update(task.id, { 
         status: destination.droppableId,
         position: newPosition
       });
-      onTasksChange();
     } catch (err) {
       console.error('Failed to update task position', err);
-      onTasksChange(); // reload original order
+      onTasksChange(); // reload original order from DB on failure
     }
   }
 

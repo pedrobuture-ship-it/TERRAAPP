@@ -115,7 +115,7 @@ export function TasksKanbanPage() {
       </div>
 
       <div className="flex-1 overflow-x-auto pb-4">
-        <KanbanBoard tasks={tasks} onTasksChange={loadTasks} membersMap={membersMap} isAdmin={isAdmin} />
+        <KanbanBoard tasks={tasks} setTasks={setTasks} onTasksChange={loadTasks} membersMap={membersMap} isAdmin={isAdmin} />
       </div>
 
       <TaskModal
