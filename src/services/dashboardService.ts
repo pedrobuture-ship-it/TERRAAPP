@@ -128,7 +128,13 @@ function isDateWithinNextDays(date: string | undefined, days: number, today: str
   if (!date || date < today) {
     return false;
   }
+  return date <= addDaysToDateString(today, days);
+}
 
+function isDateOverdueOrWithinNextDays(date: string | undefined, days: number, today: string) {
+  if (!date) {
+    return false;
+  }
   return date <= addDaysToDateString(today, days);
 }
 
@@ -194,32 +200,48 @@ function buildAlerts(
   for (const insemination of inseminations) {
     const animal = animals.find((item) => item.id === insemination.animal_id);
 
-    if (
-      (insemination.status ?? 'awaiting_diagnosis') === 'awaiting_diagnosis' &&
-      isDateWithinNextDays(insemination.diagnosis_due_date, UPCOMING_DIAGNOSIS_DAYS, today)
-    ) {
-      alerts.push({
-        id: `diagnosis-${insemination.id}`,
-        title: 'Diagnóstico de gestação próximo',
-        description: `${getAnimalLabel(animal)} deve ser avaliada.`,
-        dueDate: insemination.diagnosis_due_date,
-        severity: 'info',
-        route: '/inseminacoes',
-      });
+    if ((insemination.status ?? 'awaiting_diagnosis') === 'awaiting_diagnosis' && insemination.diagnosis_due_date) {
+      if (insemination.diagnosis_due_date < today) {
+        alerts.push({
+          id: `diagnosis-overdue-${insemination.id}`,
+          title: 'Diagnóstico atrasado',
+          description: `${getAnimalLabel(animal)} já deveria ter sido avaliada.`,
+          dueDate: insemination.diagnosis_due_date,
+          severity: 'danger',
+          route: '/inseminacoes',
+        });
+      } else if (isDateWithinNextDays(insemination.diagnosis_due_date, UPCOMING_DIAGNOSIS_DAYS, today)) {
+        alerts.push({
+          id: `diagnosis-${insemination.id}`,
+          title: 'Diagnóstico de gestação próximo',
+          description: `${getAnimalLabel(animal)} deve ser avaliada.`,
+          dueDate: insemination.diagnosis_due_date,
+          severity: 'info',
+          route: '/inseminacoes',
+        });
+      }
     }
 
-    if (
-      (insemination.status === 'positive' || animal?.reproductive_status === 'pregnant') &&
-      isDateWithinNextDays(insemination.birth_due_date, UPCOMING_BIRTH_DAYS, today)
-    ) {
-      alerts.push({
-        id: `birth-${insemination.id}`,
-        title: 'Parto previsto',
-        description: `${getAnimalLabel(animal)} tem parto previsto.`,
-        dueDate: insemination.birth_due_date,
-        severity: 'warning',
-        route: '/partos',
-      });
+    if ((insemination.status === 'positive' || animal?.reproductive_status === 'pregnant') && insemination.birth_due_date) {
+      if (insemination.birth_due_date < today) {
+        alerts.push({
+          id: `birth-overdue-${insemination.id}`,
+          title: 'Parto atrasado',
+          description: `${getAnimalLabel(animal)} já passou da data prevista de parto.`,
+          dueDate: insemination.birth_due_date,
+          severity: 'danger',
+          route: '/partos',
+        });
+      } else if (isDateWithinNextDays(insemination.birth_due_date, UPCOMING_BIRTH_DAYS, today)) {
+        alerts.push({
+          id: `birth-${insemination.id}`,
+          title: 'Parto previsto',
+          description: `${getAnimalLabel(animal)} tem parto previsto.`,
+          dueDate: insemination.birth_due_date,
+          severity: 'warning',
+          route: '/partos',
+        });
+      }
     }
   }
 
@@ -256,20 +278,6 @@ function buildAlerts(
     }
   }
 
-  for (const semen of semenRecords) {
-    if (semen.status === 'active' && (semen.doses_available ?? semen.quantity ?? 0) <= LOW_SEMEN_DOSES_LIMIT) {
-      alerts.push({
-        id: `semen-${semen.id}`,
-        title: 'Estoque de sêmen baixo',
-        description: `O touro ${semen.bull_name} está com estoque baixo (${
-          semen.doses_available ?? semen.quantity
-        } dose(s)).`,
-        severity: 'warning',
-        route: '/touros-semen',
-      });
-    }
-  }
-
   for (const animal of animals.filter(isMatrixCandidate)) {
     const matrixStatus = getDerivedMatrixStatus(animal, inseminations, births);
 
@@ -297,7 +305,7 @@ function buildAlerts(
   for (const semen of semenRecords) {
     const doses = semen.doses_available ?? semen.quantity ?? 0;
 
-    if (doses <= LOW_SEMEN_DOSES_LIMIT) {
+    if (semen.status === 'active' && doses <= LOW_SEMEN_DOSES_LIMIT) {
       alerts.push({
         id: `semen-low-${semen.id}`,
         title: 'Estoque baixo de sêmen',
