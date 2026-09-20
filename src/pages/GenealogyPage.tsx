@@ -211,6 +211,14 @@ export function GenealogyPage() {
                     {simulationResult.score}
                     <span className="text-2xl text-slate-400 font-normal">/10</span>
                   </div>
+                  <div className="mt-4 w-full bg-white rounded border border-slate-100 p-3 text-xs text-slate-600">
+                    <p className="font-bold mb-1 text-slate-700">Como essa nota foi calculada?</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      {simulationResult.breakdown.map((item, idx) => (
+                        <li key={idx}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
 
                 {/* Detalhes */}

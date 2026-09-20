@@ -24,6 +24,7 @@ export interface CrossSimulationResult {
   inbreedingMessage: string;
   heterosisLevel: 'none' | 'maintenance' | 'industrial';
   heterosisMessage: string;
+  breakdown: string[];
 }
 
 import { getActiveFarmId } from './farmContextService';
@@ -97,13 +98,14 @@ export function simulateCross(femaleId: string, maleId: string, animals: Animal[
   const maleSemen = semenList.find((s) => s.id === maleId);
 
   let score = 10;
+  let breakdown: string[] = ['Nota Base Inicial: 10/10'];
   let inbreedingLevel: CrossSimulationResult['inbreedingLevel'] = 'none';
   let inbreedingMessage = 'Sem parentesco próximo. Cruzamento seguro.';
   let heterosisLevel: CrossSimulationResult['heterosisLevel'] = 'none';
   let heterosisMessage = 'Raça não informada. Preencha o cadastro para uma análise melhor.';
 
   if (!female || (!maleAnimal && !maleSemen)) {
-    return { score: 0, inbreedingLevel: 'critical', inbreedingMessage: 'Animais inválidos.', heterosisLevel: 'none', heterosisMessage: '' };
+    return { score: 0, inbreedingLevel: 'critical', inbreedingMessage: 'Animais inválidos.', heterosisLevel: 'none', heterosisMessage: '', breakdown: [] };
   }
 
   let isCritical = false;
@@ -152,16 +154,21 @@ export function simulateCross(femaleId: string, maleId: string, animals: Animal[
 
   if (isCritical) {
     inbreedingLevel = 'critical';
-    inbreedingMessage = 'ALERTA CRÐTICO: Parentesco de 1ª Grau (Risco severo de defeitos e perda de fertilidade).';
+    inbreedingMessage = 'ALERTA CRÍTICO: Parentesco de 1º Grau (Risco severo de defeitos e perda de fertilidade).';
     score -= 8;
+    breakdown.push('Penalidade grave por Endogamia Crítica: -8 pontos');
   } else if (isHighAlert) {
     inbreedingLevel = 'high';
-    inbreedingMessage = 'ALERTA ALTO: Parentesco de 2ª Grau (Consanguinidade de ~12.5%).';
+    inbreedingMessage = 'ALERTA ALTO: Parentesco de 2º Grau (Consanguinidade de ~12.5%).';
     score -= 4;
+    breakdown.push('Penalidade alta por Endogamia de 2º Grau: -4 pontos');
   } else if (isDistant) {
     inbreedingLevel = 'distant';
     inbreedingMessage = 'Parentesco distante encontrado. Monitore os descendentes.';
     score -= 1;
+    breakdown.push('Penalidade leve por Parentesco Distante: -1 ponto');
+  } else {
+    breakdown.push('Sem penalidade de consanguinidade (Sem parentesco próximo): 0 pontos');
   }
 
   const femaleBreed = (female.breed || '').trim().toLowerCase();
@@ -171,13 +178,16 @@ export function simulateCross(femaleId: string, maleId: string, animals: Animal[
     if (femaleBreed !== maleBreed) {
       heterosisLevel = 'industrial';
       heterosisMessage = 'Cruzamento Industrial: Raças diferentes geram Vigor Híbrido (ganho de peso e rusticidade).';
+      breakdown.push('Bônus por Vigor Híbrido (Cruzamento Industrial): 0 pontos perdidos');
     } else {
       heterosisLevel = 'maintenance';
       heterosisMessage = 'Manutenção de Linhagem: Mesma raça. Ideal para manter pureza (PO).';
       score -= 1;
+      breakdown.push('Desconto leve por cruzamento puro (Sem Vigor Híbrido): -1 ponto');
     }
   } else {
     score -= 2;
+    breakdown.push('Desconto por Raça Desconhecida (Dados incompletos): -2 pontos');
   }
 
   return {
@@ -186,5 +196,6 @@ export function simulateCross(femaleId: string, maleId: string, animals: Animal[
     inbreedingMessage,
     heterosisLevel,
     heterosisMessage,
+    breakdown,
   };
 }
