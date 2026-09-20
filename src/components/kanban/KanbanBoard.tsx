@@ -6,18 +6,19 @@ import { TaskCard } from './TaskCard';
 
 interface KanbanBoardProps {
   membersMap: Record<string, string>;
+  isAdmin: boolean;
   tasks: Task[];
   onTasksChange: () => void;
 }
 
 const COLUMNS = [
   { id: 'todo', title: 'A fazer' },
+  { id: 'doing', title: 'Fazendo' },
   { id: 'waiting', title: 'Aguardando' },
-  { id: 'doing', title: 'Em andamento' },
-  { id: 'done', title: 'Finalizado' },
+  { id: 'done', title: 'Feito' },
 ];
 
-export function KanbanBoard({ tasks, onTasksChange, membersMap }: KanbanBoardProps) {
+export function KanbanBoard({ tasks, onTasksChange, membersMap, isAdmin }: KanbanBoardProps) {
   async function handleDragEnd(result: DropResult) {
     if (!result.destination) return;
 
@@ -59,7 +60,7 @@ export function KanbanBoard({ tasks, onTasksChange, membersMap }: KanbanBoardPro
                             {...provided.dragHandleProps}
                             className={`mb-2 ${snapshot.isDragging ? 'opacity-50' : ''}`}
                           >
-                            <TaskCard task={task} onTasksChange={onTasksChange} membersMap={membersMap} />
+                            <TaskCard task={task} onTasksChange={onTasksChange} membersMap={membersMap} isAdmin={isAdmin} />
                           </div>
                         )}
                       </Draggable>

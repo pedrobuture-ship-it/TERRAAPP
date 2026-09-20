@@ -16,6 +16,7 @@ export function TasksKanbanPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { session } = useAuth();
   const [membersMap, setMembersMap] = useState<Record<string, string>>({});
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     loadMembers();
@@ -30,10 +31,15 @@ export function TasksKanbanPage() {
       });
       if (!error && data) {
         const map: Record<string, string> = {};
+        let adminFound = false;
         data.forEach((m: any) => {
           map[m.user_id] = m.email.split('@')[0];
+          if (m.user_id === session?.user?.id && (m.role === 'admin' || m.role === 'owner')) {
+            adminFound = true;
+          }
         });
         setMembersMap(map);
+        setIsAdmin(adminFound);
       }
     } catch (err) {
       console.error(err);
@@ -109,7 +115,7 @@ export function TasksKanbanPage() {
       </div>
 
       <div className="flex-1 overflow-x-auto pb-4">
-        <KanbanBoard tasks={tasks} onTasksChange={loadTasks} membersMap={membersMap} />
+        <KanbanBoard tasks={tasks} onTasksChange={loadTasks} membersMap={membersMap} isAdmin={isAdmin} />
       </div>
 
       <TaskModal

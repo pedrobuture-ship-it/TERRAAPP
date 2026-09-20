@@ -144,9 +144,9 @@ export function TaskModal({ isOpen, onClose, onSave, existingTask }: TaskModalPr
                 className="w-full rounded-md border-slate-300 shadow-sm focus:border-field-500 focus:ring-field-500 sm:text-sm p-2 border"
               >
                 <option value="todo">A fazer</option>
+                <option value="doing">Fazendo</option>
                 <option value="waiting">Aguardando</option>
-                <option value="doing">Em andamento</option>
-                <option value="done">Finalizado</option>
+                <option value="done">Feito</option>
               </select>
             </div>
           </div>

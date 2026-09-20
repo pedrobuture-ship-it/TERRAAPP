@@ -6,6 +6,7 @@ import { TaskModal } from './TaskModal';
 
 interface TaskCardProps {
   membersMap: Record<string, string>;
+  isAdmin: boolean;
   task: Task;
   onTasksChange: () => void;
 }
@@ -16,7 +17,7 @@ const PRIORITY_COLORS: Record<string, string> = {
   Alta: 'bg-red-500',
 };
 
-export function TaskCard({ task, onTasksChange, membersMap }: TaskCardProps) {
+export function TaskCard({ task, onTasksChange, membersMap, isAdmin }: TaskCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -36,7 +37,7 @@ export function TaskCard({ task, onTasksChange, membersMap }: TaskCardProps) {
       >
         <div className="flex justify-between items-start gap-2">
           <h4 className="font-medium text-slate-800 line-clamp-2">{task.title}</h4>
-          <button
+          {isAdmin && (<button
             onClick={(e) => {
               e.stopPropagation();
               setIsMenuOpen(!isMenuOpen);
@@ -44,10 +45,10 @@ export function TaskCard({ task, onTasksChange, membersMap }: TaskCardProps) {
             className="text-slate-400 hover:text-slate-600"
           >
             <MoreVertical className="w-4 h-4" />
-          </button>
+          </button>)}
         </div>
 
-        {isMenuOpen && (
+        {isMenuOpen && isAdmin && (
           <div className="absolute right-2 top-8 bg-white border border-slate-200 shadow-lg rounded-md z-10">
             <button
               onClick={handleDelete}
