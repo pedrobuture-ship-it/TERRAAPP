@@ -1,74 +1,27 @@
-# TERRA APP
+# Terra App - Sistema de Gestão Pecuária
 
-O TERRA é um aplicativo (PWA) offline-first para gestão agropecuária e controle zootécnico.
+O Terra App é uma plataforma de gestão voltada para propriedades rurais e pecuária. O principal diferencial do sistema é ter sido construído para a realidade do campo, onde a conexão de internet costuma ser instável ou inexistente. 
 
-Seu diferencial é funcionar 100% offline através do IndexedDB no navegador ou celular, permitindo o cadastro de animais, inseminações, partos e manejos mesmo sem internet no curral. Quando há conexão, o usuário pode sincronizar os dados com a nuvem (Supabase) para backup seguro e acesso em múltiplos dispositivos através do conceito de "Fazendas".
+Ele permite que gerentes, vaqueiros e veterinários utilizem o sistema no pasto pelo celular, façam todos os apontamentos necessários de forma totalmente offline, e sincronizem os dados com a nuvem apenas quando retornarem para uma área com cobertura de internet.
 
-## 🚀 Principais Funcionalidades
+## O que o aplicativo faz
 
-- **Offline-First:** Cadastro e gestão completa sem internet.
-- **PWA Instalável:** Pode ser instalado como aplicativo nativo em Android, iOS e Desktop (Windows/Mac/Linux).
-- **Multi-Fazendas (B2B):** Crie fazendas e gerencie os dados de forma isolada na nuvem.
-- **Genealogia e Acasalamento:** Simule cruzamentos e evite consanguinidade alta.
-- **Gestão Reprodutiva:** Inseminações, diagnósticos de gestação e partos.
-- **Controle de Rebanho:** Matrizes, bezerros, touros e sêmen.
-- **Manejo Sanitário:** Vacinas, medicamentos, controle de estoque de doses.
-- **Backup Local e Nuvem:** Exporte um JSON local ou sincronize em nuvem via Supabase.
+O sistema foi desenhado para cobrir a rotina de uma fazenda, focando no controle reprodutivo, manejo sanitário e organização da equipe.
 
-## 🛠️ Tecnologias Utilizadas
+### Organização do Dia a Dia (Kanban)
+Logo ao abrir o aplicativo, a tela inicial apresenta um quadro de tarefas focado na operação. Ele serve para organizar as atividades diárias da fazenda, permitindo criar rotinas e arrastar os cartões de atividades conforme o trabalho avança entre as colunas de status.
 
-- **Frontend:** React 18, Vite, TypeScript, Tailwind CSS
-- **Banco de Dados Local:** Dexie.js (IndexedDB)
-- **Banco de Dados em Nuvem e Autenticação:** Supabase (PostgreSQL + Auth)
-- **Roteamento:** React Router DOM
-- **Ícones:** Lucide React
+### Controle de Rebanho e Lotes
+Permite o cadastro detalhado de matrizes, touros e bezerros. O sistema facilita a movimentação do rebanho por meio de ações em massa, onde o usuário pode selecionar diversos animais de uma vez e transferi-los de um piquete para outro de forma rápida.
 
-## 📦 Instalação e Execução
+### Reprodução e Genealogia
+A aba de acasalamento guarda a árvore genealógica do rebanho e oferece um simulador de cruzas. Antes de realizar uma inseminação, o produtor pode simular o cruzamento entre uma fêmea e um macho do estoque de sêmen. O sistema calcula automaticamente os riscos de consanguinidade (endogamia) e o potencial de vigor híbrido (heterose), entregando uma nota e uma explicação detalhada sobre a viabilidade daquele cruzamento.
 
-### Pré-requisitos
-- Node.js (v18 ou superior)
-- Conta no [Supabase](https://supabase.com) (se desejar configurar a nuvem)
+### Saúde e Manejo Sanitário
+Registro completo de aplicação de vacinas, vermífugos e tratamentos veterinários. O produtor pode controlar os prazos de carência e as datas de reaplicação para lotes inteiros ou animais específicos.
 
-### Rodando Localmente
+### Sistema de Alertas Inteligente
+O aplicativo atua como um assistente proativo. Ele analisa os dados registrados e gera notificações automáticas no painel superior. O sistema alerta o usuário sobre diagnósticos de gestação atrasados, partos que estão previstos para os próximos dias, vacinas vencendo e avisa quando o estoque de doses de sêmen de um touro está chegando ao fim.
 
-1. Clone o repositório.
-2. Instale as dependências:
-   ```bash
-   npm install
-   ```
-3. Inicie o servidor de desenvolvimento:
-   ```bash
-   npm run dev
-   ```
-4. Acesse no navegador: `http://localhost:5173`
-
-*O app já funcionará localmente sem precisar configurar o Supabase. Os dados ficarão salvos no seu navegador.*
-
-## ☁️ Configuração do Supabase (Opcional para Nuvem)
-
-Para ativar a sincronização e login, configure um projeto no Supabase:
-
-1. Crie um projeto no Supabase.
-2. Acesse a aba **SQL Editor** no painel do Supabase.
-3. Copie o conteúdo do arquivo `supabase/schema.sql` que está na raiz do projeto e execute no SQL Editor. (Isso criará todas as tabelas, RLS e gatilhos de segurança).
-4. Crie um arquivo `.env` na raiz do projeto (use o `.env.example` como base):
-   ```env
-   VITE_SUPABASE_URL=sua-url-do-projeto
-   VITE_SUPABASE_ANON_KEY=sua-chave-anon-publica
-   ```
-   
-**Atenção:** Nunca coloque a sua `service_role key` no frontend!
-
-## 📱 Instalando no Celular (PWA)
-
-Para instalar no celular, o app deve estar rodando sob **HTTPS** (em produção):
-- **Android (Chrome):** Acesse o site, clique no menu de três pontos e escolha "Instalar aplicativo" ou "Adicionar à tela inicial".
-- **iOS (Safari):** Acesse o site, clique no ícone de Compartilhar e escolha "Adicionar à Tela de Início".
-
-## 🏗️ Deploy em Produção
-
-O projeto está configurado para deploy fácil na Vercel:
-1. Conecte seu repositório no Vercel.
-2. Defina o Framework Preset como **Vite**.
-3. Adicione as variáveis de ambiente (`VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`).
-4. Faça o deploy!
+### Relatórios
+Toda a base de dados construída no aplicativo pode ser facilmente exportada para arquivos de texto estruturados, ideais para abrir em planilhas financeiras, ou convertida em documentos fixos para impressão e compartilhamento com consultores e veterinários externos.
