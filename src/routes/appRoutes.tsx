@@ -41,6 +41,14 @@ export const appRoutes: AppRouteDefinition[] = [
     Component: DashboardPage,
   },
   {
+    id: 'tarefas',
+    path: '/tarefas',
+    label: 'Tarefas (Kanban)',
+    shortLabel: 'Tarefas',
+    icon: KanbanSquare,
+    Component: TasksKanbanPage,
+  },
+  {
     id: 'genealogia',
     path: '/genealogy',
     label: 'Genealogia & Acasalamento',
@@ -128,12 +136,5 @@ export const appRoutes: AppRouteDefinition[] = [
     icon: DatabaseBackup,
     Component: BackupPage,
   },
-  {
-    id: 'tarefas',
-    path: '/tarefas',
-    label: 'Tarefas (Kanban)',
-    shortLabel: 'Tarefas',
-    icon: KanbanSquare,
-    Component: TasksKanbanPage,
-  },
+
 ];

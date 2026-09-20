@@ -11,6 +11,7 @@ interface KanbanBoardProps {
 
 const COLUMNS = [
   { id: 'todo', title: 'A fazer' },
+  { id: 'waiting', title: 'Aguardando' },
   { id: 'doing', title: 'Em andamento' },
   { id: 'done', title: 'Finalizado' },
 ];

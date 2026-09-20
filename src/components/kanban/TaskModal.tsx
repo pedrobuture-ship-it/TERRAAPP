@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
 import type { Task } from '../../types';
 import { tasksService } from '../../services/tasksService';
+import { supabase } from '../../lib/supabase';
+import { getSelectedFarmId } from '../../services/syncService';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -10,12 +12,19 @@ interface TaskModalProps {
   existingTask?: Task;
 }
 
+interface Member {
+  user_id: string;
+  email: string;
+}
+
 export function TaskModal({ isOpen, onClose, onSave, existingTask }: TaskModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('Média');
   const [status, setStatus] = useState('todo');
+  const [assignedTo, setAssignedTo] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [members, setMembers] = useState<Member[]>([]);
 
   useEffect(() => {
     if (existingTask) {
@@ -23,13 +32,38 @@ export function TaskModal({ isOpen, onClose, onSave, existingTask }: TaskModalPr
       setDescription(existingTask.description || '');
       setPriority(existingTask.priority);
       setStatus(existingTask.status);
+      setAssignedTo(existingTask.assigned_to || '');
     } else {
       setTitle('');
       setDescription('');
       setPriority('Baixa');
       setStatus('todo');
+      setAssignedTo('');
     }
   }, [existingTask, isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadMembers();
+    }
+  }, [isOpen]);
+
+  async function loadMembers() {
+    try {
+      const farmId = getSelectedFarmId();
+      if (!farmId) return;
+      
+      const { data, error } = await supabase!.rpc('get_farm_members_with_email', {
+        target_farm_id: farmId
+      });
+      
+      if (!error && data) {
+        setMembers(data as Member[]);
+      }
+    } catch (err) {
+      console.error('Failed to load members, maybe offline', err);
+    }
+  }
 
   if (!isOpen) return null;
 
@@ -46,12 +80,13 @@ export function TaskModal({ isOpen, onClose, onSave, existingTask }: TaskModalPr
         description,
         priority,
         status,
+        assigned_to: assignedTo || undefined,
       };
 
       if (existingTask) {
         await tasksService.update(existingTask.id, payload);
       } else {
-        await tasksService.create(payload);
+        await tasksService.create(payload as any);
       }
 
       onSave();
@@ -109,10 +144,25 @@ export function TaskModal({ isOpen, onClose, onSave, existingTask }: TaskModalPr
                 className="w-full rounded-md border-slate-300 shadow-sm focus:border-field-500 focus:ring-field-500 sm:text-sm p-2 border"
               >
                 <option value="todo">A fazer</option>
+                <option value="waiting">Aguardando</option>
                 <option value="doing">Em andamento</option>
                 <option value="done">Finalizado</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Atribuir para (Responsável)</label>
+            <select
+              value={assignedTo}
+              onChange={(e) => setAssignedTo(e.target.value)}
+              className="w-full rounded-md border-slate-300 shadow-sm focus:border-field-500 focus:ring-field-500 sm:text-sm p-2 border"
+            >
+              <option value="">-- Ninguém (Desatribuído) --</option>
+              {members.map(m => (
+                <option key={m.user_id} value={m.user_id}>{m.email}</option>
+              ))}
+            </select>
           </div>
 
           <div>
