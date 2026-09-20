@@ -40,34 +40,25 @@ export function getSanitaryStatusLabel(status: SanitaryManagementStatus) {
   return sanitaryStatusLabels[status] ?? status;
 }
 
-export function isSanitaryOverdue(date: string, nextApplicationDate?: string, status?: SanitaryManagementStatus) {
+export function isSanitaryOverdue(nextApplicationDate?: string, status?: SanitaryManagementStatus) {
   if (status === 'overdue') {
     return true;
   }
 
-  if (status === 'pending' && date < todayDateString()) {
-    return true;
-  }
-
-  return Boolean(nextApplicationDate && nextApplicationDate < todayDateString() && status !== 'done');
+  return Boolean(nextApplicationDate && nextApplicationDate < todayDateString());
 }
 
-export function isSanitaryUpcoming(date: string, nextApplicationDate?: string, status?: SanitaryManagementStatus) {
-  if (isSanitaryOverdue(date, nextApplicationDate, status)) {
+export function isSanitaryUpcoming(nextApplicationDate?: string, status?: SanitaryManagementStatus) {
+  if (!nextApplicationDate || isSanitaryOverdue(nextApplicationDate, status)) {
     return false;
   }
 
-  if (status === 'pending' && date <= addDaysToDateString(todayDateString(), UPCOMING_SANITARY_DAYS)) {
-    return true;
-  }
-
-  return Boolean(nextApplicationDate && nextApplicationDate <= addDaysToDateString(todayDateString(), UPCOMING_SANITARY_DAYS) && status !== 'done');
+  return nextApplicationDate <= addDaysToDateString(todayDateString(), UPCOMING_SANITARY_DAYS);
 }
 
 export function getEffectiveSanitaryStatus(
-  date: string,
   status: SanitaryManagementStatus,
   nextApplicationDate?: string,
 ) {
-  return isSanitaryOverdue(date, nextApplicationDate, status) ? 'overdue' : status;
+  return isSanitaryOverdue(nextApplicationDate, status) ? 'overdue' : status;
 }
