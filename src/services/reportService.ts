@@ -371,7 +371,7 @@ export function buildCsvReport(key: CsvReportKey, dataset: ReportDataset): Gener
         record.responsible,
         record.product,
         record.dosage,
-        getSanitaryStatusLabel(getEffectiveSanitaryStatus(record.status, record.next_application_date)),
+        getSanitaryStatusLabel(getEffectiveSanitaryStatus(record.date, record.status ?? 'done', record.next_application_date)),
         record.notes,
       ]),
     );
@@ -488,7 +488,7 @@ function expectedBirthLines(dataset: ReportDataset) {
 
 function pendingSanitaryLines(dataset: ReportDataset) {
   return dataset.sanitaryRecords
-    .filter((record) => getEffectiveSanitaryStatus(record.status, record.next_application_date) !== 'done')
+    .filter((record) => getEffectiveSanitaryStatus(record.date, record.status ?? 'done', record.next_application_date) !== 'done')
     .sort((a, b) => (a.next_application_date ?? a.date).localeCompare(b.next_application_date ?? b.date))
     .map((record) => {
       const target = record.animal_id
@@ -498,7 +498,7 @@ function pendingSanitaryLines(dataset: ReportDataset) {
       return `${formatDatePtBr(record.next_application_date || record.date)} | ${getSanitaryTypeLabel(
         record.procedure_type,
       )} | ${target} | ${getSanitaryStatusLabel(
-        getEffectiveSanitaryStatus(record.status, record.next_application_date),
+        getEffectiveSanitaryStatus(record.date, record.status ?? 'done', record.next_application_date),
       )} | ${record.product || '-'}`;
     });
 }

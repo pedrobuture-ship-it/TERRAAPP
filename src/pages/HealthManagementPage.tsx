@@ -191,10 +191,7 @@ export function HealthManagementPage() {
   const filteredRecords = useMemo(() => {
     return records
       .filter((record) => {
-        const effectiveStatus = getEffectiveSanitaryStatus(
-          record.status ?? 'done',
-          record.next_application_date,
-        );
+        const effectiveStatus = getEffectiveSanitaryStatus(record.date, record.status ?? 'done', record.next_application_date);
         const selectedLot = filters.lot_id
           ? lots.find((lot) => lot.id === filters.lot_id)
           : undefined;
@@ -217,7 +214,7 @@ export function HealthManagementPage() {
   const overdueRecords = useMemo(
     () =>
       records
-        .filter((record) => isSanitaryOverdue(record.next_application_date, record.status))
+        .filter((record) => isSanitaryOverdue(record.date, record.next_application_date, record.status))
         .sort((a, b) =>
           (a.next_application_date ?? a.date).localeCompare(b.next_application_date ?? b.date),
         ),
@@ -227,7 +224,7 @@ export function HealthManagementPage() {
   const upcomingRecords = useMemo(
     () =>
       records
-        .filter((record) => isSanitaryUpcoming(record.next_application_date, record.status))
+        .filter((record) => isSanitaryUpcoming(record.date, record.next_application_date, record.status))
         .sort((a, b) =>
           (a.next_application_date ?? a.date).localeCompare(b.next_application_date ?? b.date),
         ),
@@ -482,118 +479,7 @@ export function HealthManagementPage() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block">
-              <span className="text-sm font-medium text-slate-700">Tipo</span>
-              <select
-                value={form.procedure_type}
-                onChange={(event) =>
-                  updateForm('procedure_type', event.target.value as SanitaryManagementType)
-                }
-                className="mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-field-600 focus:ring-2 focus:ring-field-100"
-              >
-                {sanitaryTypeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="block">
-              <span className="text-sm font-medium text-slate-700">Status</span>
-              <select
-                value={form.status}
-                onChange={(event) =>
-                  updateForm('status', event.target.value as SanitaryManagementStatus)
-                }
-                className="mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-field-600 focus:ring-2 focus:ring-field-100"
-              >
-                {sanitaryStatusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <fieldset className="sm:col-span-2">
-              <legend className="text-sm font-medium text-slate-700">Alvo do manejo</legend>
-              <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                <label className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700">
-                  <input
-                    type="radio"
-                    checked={form.target_type === 'animal'}
-                    onChange={() => updateForm('target_type', 'animal')}
-                  />
-                  Animal tratado
-                </label>
-                <label className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700">
-                  <input
-                    type="radio"
-                    checked={form.target_type === 'lot'}
-                    onChange={() => updateForm('target_type', 'lot')}
-                  />
-                  Lote tratado
-                </label>
-              </div>
-            </fieldset>
-
-            {form.target_type === 'animal' ? (
-              <label className="block sm:col-span-2">
-                <span className="text-sm font-medium text-slate-700">Animal tratado *</span>
-                <select
-                  value={form.animal_id}
-                  onChange={(event) => updateForm('animal_id', event.target.value)}
-                  className="mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-field-600 focus:ring-2 focus:ring-field-100"
-                >
-                  <option value="">Selecione</option>
-                  {animalOptions.map((animal) => (
-                    <option key={animal.id} value={animal.id}>
-                      {animal.identification} {animal.name ? `- ${animal.name}` : ''} ·{' '}
-                      {getAnimalCategoryLabel(animal.category)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : (
-              <label className="block sm:col-span-2">
-                <span className="text-sm font-medium text-slate-700">Lote tratado *</span>
-                <select
-                  value={form.lot_id}
-                  onChange={(event) => updateForm('lot_id', event.target.value)}
-                  className="mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-field-600 focus:ring-2 focus:ring-field-100"
-                >
-                  <option value="">Selecione</option>
-                  {lotOptions.map((lot) => (
-                    <option key={lot.value} value={lot.value}>
-                      {lot.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-
-            <label className="block">
-              <span className="text-sm font-medium text-slate-700">Data de aplicação</span>
-              <input
-                type="date"
-                value={form.date}
-                max={new Date().toISOString().split('T')[0]}
-                onChange={(event) => updateForm('date', event.target.value)}
-                className="mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-field-600 focus:ring-2 focus:ring-field-100"
-              />
-            </label>
-
-            <label className="block">
-              <span className="text-sm font-medium text-slate-700">Próxima aplicação</span>
-              <input
-                type="date"
-                min={form.date}
-                value={form.next_application_date}
-                onChange={(event) => updateForm('next_application_date', event.target.value)}
-                className="mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-field-600 focus:ring-2 focus:ring-field-100"
-              />
-            </label>
+            
 
             <label className="block">
               <span className="text-sm font-medium text-slate-700">Responsável</span>
@@ -760,10 +646,7 @@ export function HealthManagementPage() {
         ) : (
           <div className="divide-y divide-slate-100">
             {filteredRecords.map((record) => {
-              const effectiveStatus = getEffectiveSanitaryStatus(
-                record.status ?? 'done',
-                record.next_application_date,
-              );
+              const effectiveStatus = getEffectiveSanitaryStatus(record.date, record.status ?? 'done', record.next_application_date);
 
               return (
                 <article key={record.id} className="p-4">

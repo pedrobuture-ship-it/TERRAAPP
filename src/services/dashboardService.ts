@@ -180,7 +180,7 @@ function buildMetrics(
     ).length,
     expectedBirths: expectedBirthMatrixIds.size,
     pendingSanitaryManagement: sanitaryRecords.filter(
-      (record) => getEffectiveSanitaryStatus(record.status ?? 'done', record.next_application_date) !== 'done',
+      (record) => getEffectiveSanitaryStatus(record.date, record.status ?? 'done', record.next_application_date) !== 'done',
     ).length,
     lowSemenStock: semenRecords.filter((semen) => (semen.doses_available ?? semen.quantity ?? 0) <= LOW_SEMEN_DOSES_LIMIT).length,
   };
@@ -285,27 +285,28 @@ function buildAlerts(
       continue;
     }
 
-    const nextDate = record.next_application_date;
-    if (!nextDate) continue;
+        const alertDate = (record.status === 'pending' && !record.next_application_date) ? record.date : record.next_application_date;
+    if (!alertDate) continue;
 
-    const status = getEffectiveSanitaryStatus(record.status ?? 'done', nextDate);
+    const status = getEffectiveSanitaryStatus(record.date, record.status ?? 'done', record.next_application_date);
+    const isReapplication = Boolean(record.next_application_date);
 
     if (status === 'overdue') {
       alerts.push({
         id: `sanitary-overdue-${record.id}`,
         title: record.procedure_type === 'vaccine' ? 'Vacina atrasada' : 'Vermífugo atrasado',
-        description: `${record.product || 'Manejo sanitário'} já deveria ter sido reaplicado.`,
-        dueDate: nextDate,
+        description: `${record.product || 'Manejo sanitário'} já deveria ter sido ${isReapplication ? 'reaplicado' : 'aplicado'}.`,
+        dueDate: alertDate,
         severity: 'danger',
         route: '/manejo-sanitario',
       });
-    } else if (status === 'pending' && isDateWithinNextDays(nextDate, 15, today)) {
+    } else if (status === 'pending' && isDateWithinNextDays(alertDate, 15, today)) {
       alerts.push({
         id: `sanitary-upcoming-${record.id}`,
         title: record.procedure_type === 'vaccine' ? 'Vacina próxima' : 'Vermífugo próximo',
-        description: `${record.product || 'Manejo sanitário'} deve ser reaplicado nos próximos 15 dias.`,
-        dueDate: nextDate,
-        severity: 'info',
+        description: `${record.product || 'Manejo sanitário'} deve ser ${isReapplication ? 'reaplicado' : 'aplicado'} nos próximos 15 dias.`,
+        dueDate: alertDate,
+          severity: 'info',
         route: '/manejo-sanitario',
       });
     }

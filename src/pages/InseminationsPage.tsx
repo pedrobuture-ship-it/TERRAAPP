@@ -231,7 +231,7 @@ export function InseminationsPage() {
       return;
     }
 
-    if (!form.semen_id && !form.bull_id) {
+    if (!form.semen_id && (!form.bull_id || form.bull_id === 'pending')) {
       setError('Selecione um sêmen ou um touro do rebanho.');
       setSaving(false);
       return;
@@ -253,7 +253,7 @@ export function InseminationsPage() {
         animal_id: form.animal_id,
         date: form.date,
         semen_id: form.semen_id || undefined,
-        bull_id: form.bull_id || undefined,
+        bull_id: (form.bull_id && form.bull_id !== 'pending') ? form.bull_id : undefined,
       technician: cleanText(form.technician),
       protocol: cleanText(form.protocol),
       type: form.type,
