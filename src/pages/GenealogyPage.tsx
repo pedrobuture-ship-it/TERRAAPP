@@ -106,13 +106,12 @@ export function GenealogyPage() {
       ) : activeTab === 'tree' ? (
         <div className="flex flex-col gap-6">
           <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-            <label className="block text-sm font-medium text-slate-700 mb-2">Selecione um Animal</label>
             <select
               className="w-full max-w-md p-2 border border-slate-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
               value={selectedTreeAnimal}
               onChange={(e) => setSelectedTreeAnimal(e.target.value)}
             >
-              <option value="">-- Selecione --</option>
+              <option value="">Selecione um Animal</option>
               {animals.map(a => (
                 <option key={a.id} value={a.id}>
                   {a.identification} {a.name ? `- ${a.name}` : ''}
