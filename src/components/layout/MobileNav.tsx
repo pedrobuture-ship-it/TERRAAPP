@@ -4,7 +4,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { appRoutes } from '../../routes/appRoutes';
 import { cn } from '../../utils/cn';
 
-const primaryMobileRouteIds = ['dashboard', 'animais', 'matrizes', 'inseminacoes'];
+const primaryMobileRouteIds = ['tarefas', 'animais', 'matrizes', 'inseminacoes'];
 
 export function MobileNav() {
   const location = useLocation();
