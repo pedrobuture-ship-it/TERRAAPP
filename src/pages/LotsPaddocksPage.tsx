@@ -99,9 +99,7 @@ export function LotsPaddocksPage() {
   }
 
   const [selectedLotFilter, setSelectedLotFilter] = useState('');
-  const [moveAnimalId, setMoveAnimalId] = useState('');
-  const [moveTargetLot, setMoveTargetLot] = useState('');
-  const [message, setMessage] = useState<string | null>(null);
+      const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function loadData() {
@@ -275,26 +273,7 @@ export function LotsPaddocksPage() {
     }
   }
 
-  async function handleMoveAnimal(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    setMessage(null);
-
-    if (!moveAnimalId || !moveTargetLot) {
-      setError('Selecione o animal e o lote/piquete de destino.');
-      return;
-    }
-
-    try {
-      await animalsService.update(moveAnimalId, { lot_id: moveTargetLot });
-      setMoveAnimalId('');
-      setMoveTargetLot('');
-      setMessage('Animal movimentado com sucesso.');
-      await loadData();
-    } catch (moveError) {
-      setError(moveError instanceof Error ? moveError.message : 'Não foi possível movimentar o animal.');
-    }
-  }
+  
 
   return (
     <PageShell
@@ -473,54 +452,7 @@ export function LotsPaddocksPage() {
         </form>
       ) : null}
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-800">
-          <ArrowRightLeft size={18} aria-hidden="true" />
-          Movimentar animal
-        </div>
-        <form onSubmit={handleMoveAnimal} className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">Animal</span>
-            <select
-              value={moveAnimalId}
-              onChange={(event) => setMoveAnimalId(event.target.value)}
-              className="mt-1 h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-field-600 focus:ring-2 focus:ring-field-100"
-            >
-              <option value="">Selecione</option>
-              {animals.filter(a => a.status === 'active' || a.status === 'inactive').map((animal) => (
-                <option key={animal.id} value={animal.id}>
-                  {animal.identification} {animal.name ? `- ${animal.name}` : ''}{' '}
-                  {animal.lot_id ? `(${lotLabel(lots, animal.lot_id)})` : ''}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">Destino</span>
-            <select
-              value={moveTargetLot}
-              onChange={(event) => setMoveTargetLot(event.target.value)}
-              className="mt-1 h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-field-600 focus:ring-2 focus:ring-field-100"
-            >
-              <option value="">Selecione</option>
-              {[...lots]
-                .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
-                .map((lot) => (
-                <option key={lot.id} value={lot.id}>
-                  {lot.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            type="submit"
-            className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-field-600 px-4 text-sm font-semibold text-white md:mt-6"
-          >
-            <ArrowRightLeft size={18} aria-hidden="true" />
-            Movimentar
-          </button>
-        </form>
-      </section>
+      
 
       <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
