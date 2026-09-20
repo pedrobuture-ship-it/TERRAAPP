@@ -35,8 +35,8 @@ const statusLabels: Record<SyncConnectionStatus, string> = {
 };
 
 const statusStyles: Record<SyncConnectionStatus, string> = {
-  offline: 'border-slate-200 bg-slate-100 text-slate-700',
-  online: 'border-sky-100 bg-sky-50 text-sky-700',
+  offline: 'border-red-200 bg-red-50 text-red-700',
+  online: 'border-field-200 bg-field-50 text-field-700',
   syncing: 'border-amber-100 bg-amber-50 text-amber-700',
   synced: 'border-field-100 bg-field-50 text-field-700',
   error: 'border-red-100 bg-red-50 text-red-700',
