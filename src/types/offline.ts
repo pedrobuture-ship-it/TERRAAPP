@@ -163,6 +163,7 @@ export interface Task extends LocalEntity {
   status: string;
   priority: string;
   assigned_to?: string;
+  position?: number;
 }
 
 export type AnyLocalEntity =

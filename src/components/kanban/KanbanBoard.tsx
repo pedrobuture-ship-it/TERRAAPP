@@ -24,12 +24,48 @@ export function KanbanBoard({ tasks, onTasksChange, membersMap, isAdmin }: Kanba
 
     const { source, destination, draggableId } = result;
 
-    if (source.droppableId !== destination.droppableId) {
-      const task = tasks.find((t) => t.id === draggableId);
-      if (task) {
-        await tasksService.update(task.id, { status: destination.droppableId });
-        onTasksChange();
-      }
+    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+      return;
+    }
+
+    const task = tasks.find((t) => t.id === draggableId);
+    if (!task) return;
+
+    const destColTasks = tasks
+      .filter((t) => t.status === destination.droppableId)
+      .sort((a, b) => (a.position || 0) - (b.position || 0));
+
+    const destSiblings = destColTasks.filter((t) => t.id !== draggableId);
+
+    const prevTask = destination.index > 0 ? destSiblings[destination.index - 1] : null;
+    const nextTask = destination.index < destSiblings.length ? destSiblings[destination.index] : null;
+
+    let newPosition = 0;
+
+    if (!prevTask && !nextTask) {
+      newPosition = 1000;
+    } else if (!prevTask) {
+      newPosition = (nextTask?.position || 0) - 1000;
+    } else if (!nextTask) {
+      newPosition = (prevTask?.position || 0) + 1000;
+    } else {
+      newPosition = ((prevTask?.position || 0) + (nextTask?.position || 0)) / 2;
+    }
+
+    // Optimistic UI update
+    task.status = destination.droppableId;
+    task.position = newPosition;
+    onTasksChange(); // to trigger re-render optimistically while saving
+
+    try {
+      await tasksService.update(task.id, { 
+        status: destination.droppableId,
+        position: newPosition
+      });
+      onTasksChange();
+    } catch (err) {
+      console.error('Failed to update task position', err);
+      onTasksChange(); // reload original order
     }
   }
 
@@ -37,7 +73,9 @@ export function KanbanBoard({ tasks, onTasksChange, membersMap, isAdmin }: Kanba
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="flex gap-4 h-full min-h-[70vh]">
         {COLUMNS.map((col) => {
-          const colTasks = tasks.filter((t) => t.status === col.id);
+          const colTasks = tasks
+            .filter((t) => t.status === col.id)
+            .sort((a, b) => (a.position || 0) - (b.position || 0));
 
           return (
             <div key={col.id} className="flex-1 min-w-[280px] bg-slate-100 rounded-lg flex flex-col">
