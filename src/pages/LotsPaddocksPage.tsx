@@ -3,6 +3,7 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { getLotStatusLabel, getLotTypeLabel, lotStatusOptions, lotTypeOptions } from '../constants/lotOptions';
 import { getAnimalCategoryLabel, getAnimalStatusLabel } from '../constants/animalOptions';
 import { PageShell } from '../components/layout/PageShell';
+import { BatchMoveModal } from '../components/animals/BatchMoveModal';
 import * as animalsService from '../services/animalsService';
 import * as lotsService from '../services/lotsService';
 import type { Animal, Lot, LotStatus, LotType } from '../types';
@@ -73,6 +74,30 @@ export function LotsPaddocksPage() {
   const [editingLot, setEditingLot] = useState<Lot | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Lot | null>(null);
   const [form, setForm] = useState<LotFormState>(emptyLotForm);
+  const [selectedAnimalIds, setSelectedAnimalIds] = useState<string[]>([]);
+  const [batchMoveModalOpen, setBatchMoveModalOpen] = useState(false);
+
+  function handleToggleSelect(id: string) {
+    setSelectedAnimalIds(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  }
+
+  function handleToggleSelectAll() {
+    if (selectedAnimalIds.length === animalsByLot.length && animalsByLot.length > 0) {
+      setSelectedAnimalIds([]);
+    } else {
+      setSelectedAnimalIds(animalsByLot.map(a => a.id));
+    }
+  }
+
+  async function handleBatchMove(lotId: string) {
+    const promises = selectedAnimalIds.map(id => animalsService.update(id, { lot_id: lotId }));
+    await Promise.all(promises);
+    await loadData();
+    setSelectedAnimalIds([]);
+  }
+
   const [selectedLotFilter, setSelectedLotFilter] = useState('');
   const [moveAnimalId, setMoveAnimalId] = useState('');
   const [moveTargetLot, setMoveTargetLot] = useState('');
@@ -498,29 +523,52 @@ export function LotsPaddocksPage() {
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <label className="block max-w-md">
-          <span className="text-sm font-medium text-slate-700">Filtrar animais por lote/piquete</span>
-          <select
-            value={selectedLotFilter}
-            onChange={(event) => setSelectedLotFilter(event.target.value)}
-            className="mt-1 h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-field-600 focus:ring-2 focus:ring-field-100"
-          >
-            <option value="">Todos os animais</option>
-            {lotFilterOptions.map((lot) => (
-              <option key={lot.value} value={lot.value}>
-                {lot.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block max-w-md w-full">
+            <span className="text-sm font-medium text-slate-700">Filtrar animais por lote/piquete</span>
+            <select
+              value={selectedLotFilter}
+              onChange={(event) => setSelectedLotFilter(event.target.value)}
+              className="mt-1 h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-field-600 focus:ring-2 focus:ring-field-100"
+            >
+              <option value="">Todos os animais</option>
+              {lotFilterOptions.map((lot) => (
+                <option key={lot.value} value={lot.value}>
+                  {lot.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        
+        {selectedAnimalIds.length > 0 && (
+          <div className="flex items-center justify-between p-3 bg-field-50 border border-field-200 rounded-lg mt-4">
+            <span className="text-sm font-semibold text-field-800">
+              {selectedAnimalIds.length} {selectedAnimalIds.length === 1 ? 'animal selecionado' : 'animais selecionados'}
+            </span>
+            <button
+              onClick={() => setBatchMoveModalOpen(true)}
+              className="px-4 py-2 bg-field-600 text-white rounded-md text-sm font-medium hover:bg-field-700 transition"
+            >
+              Mover de Lote
+            </button>
+          </div>
+        )}
 
         <div className="mt-4 overflow-hidden rounded-lg border border-slate-200">
           {animalsByLot.length === 0 ? (
             <div className="p-4 text-sm text-slate-500">Nenhum animal neste filtro.</div>
           ) : (
             <div className="divide-y divide-slate-100">
+              <div className="grid gap-2 p-3 text-sm sm:grid-cols-[auto_1fr_auto_auto] sm:items-center bg-slate-50 border-b border-slate-200">
+                <input type="checkbox" checked={selectedAnimalIds.length === animalsByLot.length && animalsByLot.length > 0} onChange={handleToggleSelectAll} className="rounded border-slate-300 text-field-600 focus:ring-field-600 w-5 h-5 cursor-pointer" />
+                <span className="font-semibold text-slate-600">Animal</span>
+                <span className="font-semibold text-slate-600">Lote Atual</span>
+                <span className="font-semibold text-slate-600">Status</span>
+              </div>
               {animalsByLot.map((animal) => (
-                <div key={animal.id} className="grid gap-2 p-3 text-sm sm:grid-cols-[1fr_auto_auto] sm:items-center">
+                <div key={animal.id} className="grid gap-3 p-3 text-sm sm:grid-cols-[auto_1fr_auto_auto] sm:items-center">
+                  <input type="checkbox" checked={selectedAnimalIds.includes(animal.id)} onChange={() => handleToggleSelect(animal.id)} className="rounded border-slate-300 text-field-600 focus:ring-field-600 w-5 h-5 cursor-pointer" />
                   <div>
                     <p className="font-semibold text-slate-950">{animal.identification}</p>
                     <p className="text-slate-500">
@@ -604,6 +652,13 @@ export function LotsPaddocksPage() {
           </div>
         )}
       </section>
+      <BatchMoveModal
+        isOpen={batchMoveModalOpen}
+        onClose={() => setBatchMoveModalOpen(false)}
+        onConfirm={handleBatchMove}
+        lots={lots}
+        selectedCount={selectedAnimalIds.length}
+      />
     </PageShell>
   );
 }
