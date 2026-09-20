@@ -197,49 +197,84 @@ function buildAlerts(
 ) {
   const alerts: DashboardAlert[] = [];
 
-  for (const insemination of inseminations) {
-    const animal = animals.find((item) => item.id === insemination.animal_id);
+  for (const animal of animals.filter(isMatrixCandidate)) {
+    const latestInsemination = getLatestInsemination(animal.id, inseminations);
+    
+    // Check if cow is pending diagnosis or pending birth
+    if (latestInsemination) {
+      const latestBirth = getLatestBirth(animal.id, births);
+      // If no birth has happened SINCE the insemination, check alerts
+      if (!latestBirth || latestBirth.birth_date < latestInsemination.date) {
+        const insemination = latestInsemination;
 
-    if ((insemination.status ?? 'awaiting_diagnosis') === 'awaiting_diagnosis' && insemination.diagnosis_due_date) {
-      if (insemination.diagnosis_due_date < today) {
-        alerts.push({
-          id: `diagnosis-overdue-${insemination.id}`,
-          title: 'Diagnóstico atrasado',
-          description: `${getAnimalLabel(animal)} já deveria ter sido avaliada.`,
-          dueDate: insemination.diagnosis_due_date,
-          severity: 'danger',
-          route: '/inseminacoes',
-        });
-      } else if (isDateWithinNextDays(insemination.diagnosis_due_date, UPCOMING_DIAGNOSIS_DAYS, today)) {
-        alerts.push({
-          id: `diagnosis-${insemination.id}`,
-          title: 'Diagnóstico de gestação próximo',
-          description: `${getAnimalLabel(animal)} deve ser avaliada.`,
-          dueDate: insemination.diagnosis_due_date,
-          severity: 'info',
-          route: '/inseminacoes',
-        });
+        if ((insemination.status ?? 'awaiting_diagnosis') === 'awaiting_diagnosis' && insemination.diagnosis_due_date) {
+          if (insemination.diagnosis_due_date < today) {
+            alerts.push({
+              id: `diagnosis-overdue-${insemination.id}`,
+              title: 'Diagnóstico atrasado',
+              description: `${getAnimalLabel(animal)} já deveria ter sido avaliada.`,
+              dueDate: insemination.diagnosis_due_date,
+              severity: 'danger',
+              route: '/inseminacoes',
+            });
+          } else if (isDateWithinNextDays(insemination.diagnosis_due_date, UPCOMING_DIAGNOSIS_DAYS, today)) {
+            alerts.push({
+              id: `diagnosis-${insemination.id}`,
+              title: 'Diagnóstico de gestação próximo',
+              description: `${getAnimalLabel(animal)} deve ser avaliada.`,
+              dueDate: insemination.diagnosis_due_date,
+              severity: 'info',
+              route: '/inseminacoes',
+            });
+          }
+        }
+
+        if ((insemination.status === 'positive' || animal?.reproductive_status === 'pregnant') && insemination.birth_due_date) {
+          if (insemination.birth_due_date < today) {
+            alerts.push({
+              id: `birth-overdue-${insemination.id}`,
+              title: 'Parto atrasado',
+              description: `${getAnimalLabel(animal)} já passou da data prevista de parto.`,
+              dueDate: insemination.birth_due_date,
+              severity: 'danger',
+              route: '/partos',
+            });
+          } else if (isDateWithinNextDays(insemination.birth_due_date, UPCOMING_BIRTH_DAYS, today)) {
+            alerts.push({
+              id: `birth-${insemination.id}`,
+              title: 'Parto previsto',
+              description: `${getAnimalLabel(animal)} tem parto previsto.`,
+              dueDate: insemination.birth_due_date,
+              severity: 'warning',
+              route: '/partos',
+            });
+          }
+        }
       }
     }
 
-    if ((insemination.status === 'positive' || animal?.reproductive_status === 'pregnant') && insemination.birth_due_date) {
-      if (insemination.birth_due_date < today) {
+    const matrixStatus = getDerivedMatrixStatus(animal, inseminations, births);
+
+    if (matrixStatus === 'empty' || matrixStatus === 'calved') {
+      const latestBirth = getLatestBirth(animal.id, births);
+      
+      let referenceDate = animal.updated_at.slice(0, 10);
+      if (latestBirth && (!latestInsemination || latestBirth.birth_date >= latestInsemination.date)) {
+        referenceDate = latestBirth.birth_date;
+      } else if (latestInsemination) {
+        referenceDate = latestInsemination.date;
+      }
+
+      const daysWithoutInsemination = daysBetweenDateStrings(referenceDate, today);
+
+      if (daysWithoutInsemination >= MATRIX_WITHOUT_INSEMINATION_DAYS) {
         alerts.push({
-          id: `birth-overdue-${insemination.id}`,
-          title: 'Parto atrasado',
-          description: `${getAnimalLabel(animal)} já passou da data prevista de parto.`,
-          dueDate: insemination.birth_due_date,
-          severity: 'danger',
-          route: '/partos',
-        });
-      } else if (isDateWithinNextDays(insemination.birth_due_date, UPCOMING_BIRTH_DAYS, today)) {
-        alerts.push({
-          id: `birth-${insemination.id}`,
-          title: 'Parto previsto',
-          description: `${getAnimalLabel(animal)} tem parto previsto.`,
-          dueDate: insemination.birth_due_date,
+          id: `matrix-without-insemination-${animal.id}`,
+          title: 'Matriz muito tempo sem inseminação',
+          description: `${getAnimalLabel(animal)} está há ${daysWithoutInsemination} dias sem inseminação registrada.`,
+          dueDate: latestInsemination?.date,
           severity: 'warning',
-          route: '/partos',
+          route: '/matrizes',
         });
       }
     }
@@ -250,54 +285,28 @@ function buildAlerts(
       continue;
     }
 
-    const target = record.animal_id
-      ? getAnimalLabel(animals.find((animal) => animal.id === record.animal_id))
-      : `Lote ${getLotLabel(lots, record.lot_id)}`;
+    const nextDate = record.next_application_date;
+    if (!nextDate) continue;
 
-    if (isSanitaryOverdue(record.next_application_date, record.status)) {
+    const status = getEffectiveSanitaryStatus(record.status ?? 'done', nextDate);
+
+    if (status === 'overdue') {
       alerts.push({
         id: `sanitary-overdue-${record.id}`,
-        title: record.procedure_type === 'vaccine' ? 'Vacina vencida' : 'Vermífugo vencido',
-        description: `${target} precisa de reaplicação.`,
-        dueDate: record.next_application_date,
+        title: record.procedure_type === 'vaccine' ? 'Vacina atrasada' : 'Vermífugo atrasado',
+        description: `${record.product || 'Manejo sanitário'} já deveria ter sido reaplicado.`,
+        dueDate: nextDate,
         severity: 'danger',
         route: '/manejo-sanitario',
       });
-      continue;
-    }
-
-    if (isSanitaryUpcoming(record.next_application_date, record.status)) {
+    } else if (status === 'pending' && isDateWithinNextDays(nextDate, 15, today)) {
       alerts.push({
         id: `sanitary-upcoming-${record.id}`,
-        title: record.procedure_type === 'vaccine' ? 'Vacina vencendo' : 'Vermífugo vencendo',
-        description: `${target} tem reaplicação próxima.`,
-        dueDate: record.next_application_date,
-        severity: 'warning',
+        title: record.procedure_type === 'vaccine' ? 'Vacina próxima' : 'Vermífugo próximo',
+        description: `${record.product || 'Manejo sanitário'} deve ser reaplicado nos próximos 15 dias.`,
+        dueDate: nextDate,
+        severity: 'info',
         route: '/manejo-sanitario',
-      });
-    }
-  }
-
-  for (const animal of animals.filter(isMatrixCandidate)) {
-    const matrixStatus = getDerivedMatrixStatus(animal, inseminations, births);
-
-    if (matrixStatus !== 'empty' && matrixStatus !== 'calved') {
-      continue;
-    }
-
-    const latestInsemination = getLatestInsemination(animal.id, inseminations);
-    const daysWithoutInsemination = latestInsemination
-      ? daysBetweenDateStrings(latestInsemination.date, today)
-      : daysBetweenDateStrings(animal.updated_at.slice(0, 10), today);
-
-    if (daysWithoutInsemination >= MATRIX_WITHOUT_INSEMINATION_DAYS) {
-      alerts.push({
-        id: `matrix-without-insemination-${animal.id}`,
-        title: 'Matriz muito tempo sem inseminação',
-        description: `${getAnimalLabel(animal)} está há ${daysWithoutInsemination} dias sem inseminação registrada.`,
-        dueDate: latestInsemination?.date,
-        severity: 'warning',
-        route: '/matrizes',
       });
     }
   }
@@ -309,41 +318,14 @@ function buildAlerts(
       alerts.push({
         id: `semen-low-${semen.id}`,
         title: 'Estoque baixo de sêmen',
-        description: `${semen.bull_name} está com ${doses} dose(s) disponível(is).`,
-        severity: doses === 0 ? 'danger' : 'warning',
+        description: `Touro ${semen.bull_name} está com ${doses} dose(s) disponível(is).`,
+        severity: 'warning',
         route: '/touros-semen',
       });
     }
   }
 
-  for (const animal of animals) {
-    const daysWithoutUpdate = daysBetweenDateStrings(animal.updated_at.slice(0, 10), today);
-
-    if (daysWithoutUpdate >= ANIMAL_STALE_DAYS) {
-      alerts.push({
-        id: `animal-stale-${animal.id}`,
-        title: 'Animal sem atualização recente',
-        description: `${getAnimalLabel(animal)} não é atualizado há ${daysWithoutUpdate} dias.`,
-        dueDate: animal.updated_at.slice(0, 10),
-        severity: 'info',
-        route: '/animais',
-      });
-    }
-  }
-
-  return alerts.sort((a, b) => {
-    const severityOrder: Record<DashboardAlertSeverity, number> = {
-      danger: 0,
-      warning: 1,
-      info: 2,
-    };
-
-    if (severityOrder[a.severity] !== severityOrder[b.severity]) {
-      return severityOrder[a.severity] - severityOrder[b.severity];
-    }
-
-    return (a.dueDate ?? '9999-12-31').localeCompare(b.dueDate ?? '9999-12-31');
-  });
+  return alerts;
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
