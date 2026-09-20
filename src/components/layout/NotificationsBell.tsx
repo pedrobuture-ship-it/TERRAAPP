@@ -76,9 +76,7 @@ export function NotificationsBell() {
         <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] origin-top-right rounded-xl border border-slate-200 bg-white shadow-xl focus:outline-none z-50 overflow-hidden flex flex-col max-h-[85vh]">
           <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-4 py-3">
             <h3 className="text-sm font-bold text-slate-900">Notificações</h3>
-            <span className="text-xs font-medium text-slate-500">
-              Não podem ser excluídas (resolva para remover)
-            </span>
+            
           </div>
           
           <div className="overflow-y-auto p-2">
