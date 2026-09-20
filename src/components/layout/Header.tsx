@@ -1,4 +1,4 @@
-import { Building2, LogIn, LogOut, RefreshCw, UserCircle, WifiOff } from 'lucide-react';
+import { Building2, LogIn, LogOut, RefreshCw, UserCircle, Wifi, WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -48,9 +48,15 @@ export function Header({ title }: HeaderProps) {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <span className="hidden items-center gap-2 rounded-full border border-field-100 bg-field-50 px-3 py-2 text-sm font-medium text-field-700 sm:inline-flex">
-            <WifiOff size={16} aria-hidden="true" />
-            {isOnline ? 'Offline-first' : 'Sem internet'}
+          <span
+            className={`hidden items-center justify-center rounded-full border p-2.5 sm:inline-flex ${
+              isOnline
+                ? 'border-field-200 bg-field-50 text-field-700'
+                : 'border-red-200 bg-red-50 text-red-700'
+            }`}
+            title={isOnline ? 'Online' : 'Sem internet'}
+          >
+            {isOnline ? <Wifi size={18} aria-hidden="true" /> : <WifiOff size={18} aria-hidden="true" />}
           </span>
           {user ? (
             <div className="flex items-center gap-2">
