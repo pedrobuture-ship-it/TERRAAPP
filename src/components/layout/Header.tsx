@@ -59,9 +59,9 @@ export function Header({ title }: HeaderProps) {
           >
             {isOnline ? <Wifi size={18} aria-hidden="true" /> : <WifiOff size={18} aria-hidden="true" />}
           </span>
+          <NotificationsBell />
           {user ? (
             <div className="flex items-center gap-2">
-              <NotificationsBell />
               <span
                 className="hidden max-w-[14rem] items-center gap-2 truncate rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm md:inline-flex"
                 title={user.email ?? 'Usuário logado'}
