@@ -159,7 +159,11 @@ export async function update(id: string, data: UpdateInseminationInput) {
 
   // Prevent modifying an insemination that was successfully concluded with a birth
   if (existing.status === 'positive' && existing.cycle_status === 'closed') {
-    throw new Error('Esta inseminação gerou um parto e foi arquivada. Exclua o parto primeiro se quiser modificá-la.');
+    if (data.cycle_status === 'active') {
+      // Allow reopening
+    } else {
+      throw new Error('Esta inseminação gerou um parto e foi arquivada. Exclua o parto primeiro se quiser modificá-la.');
+    }
   }
 
   const nextSemenId = data.semen_id ?? existing.semen_id;
