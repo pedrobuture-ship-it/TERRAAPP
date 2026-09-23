@@ -130,7 +130,7 @@ export async function update(id: string, data: UpdateBirthInput) {
   return record;
 }
 
-export async function deleteBirth(id: string) {
+export async function deleteBirth(id: string, deleteCalves: boolean = false) {
   const existing = await baseBirthsService.getById(id);
 
   if (!existing) {
@@ -138,13 +138,33 @@ export async function deleteBirth(id: string) {
   }
 
   const record = await baseBirthsService.delete(id);
-  
-  // Bug 11 fix: Reopen the most recent insemination cycle if we deleted the birth
+
+  if (deleteCalves) {
+    const allAnimals = await animalsService.list();
+    const calvesToDelete = allAnimals.filter(
+      (a) => a.mother_id === record.animal_id && a.birth_date === record.birth_date
+    );
+    for (const calf of calvesToDelete) {
+      await animalsService.deleteAnimal(calf.id).catch(() => undefined);
+    }
+  }
+
+  // Bug 11 & Bug 12 fix: Reopen the insemination cycle specifically tied to this birth
   const allInseminations = await db.inseminations.where('animal_id').equals(record.animal_id).toArray();
-  const lastInsem = allInseminations.filter(i => !i.deleted_at).sort((a, b) => b.date.localeCompare(a.date))[0];
   
-  if (lastInsem && lastInsem.cycle_status === 'closed') {
-    await inseminationsService.update(lastInsem.id, { cycle_status: 'active' });
+  // Find the most recent insemination before or exactly on the birth date
+  const relatedInsem = allInseminations
+    .filter(i => !i.deleted_at && i.date <= record.birth_date)
+    .sort((a, b) => b.date.localeCompare(a.date))[0];
+
+  if (relatedInsem && relatedInsem.cycle_status === 'closed') {
+    // Only re-open it if there are NO OTHER births after this insemination
+    const allBirths = await db.births.where('animal_id').equals(record.animal_id).toArray();
+    const otherBirths = allBirths.filter(b => b.id !== record.id && b.birth_date >= relatedInsem.date);
+    
+    if (otherBirths.length === 0) {
+      await inseminationsService.update(relatedInsem.id, { cycle_status: 'active' });
+    }
   }
 
   await updateMatrixStatus(record.animal_id);

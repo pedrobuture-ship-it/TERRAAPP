@@ -375,10 +375,15 @@ export function BirthsPage() {
       return;
     }
 
+    let deleteCalf = false;
+    if (pendingDelete.calf_id || (pendingDelete.calf_count && pendingDelete.calf_count > 0)) {
+      deleteCalf = window.confirm('Deseja excluir também o(s) bezerro(s) gerado(s) neste parto?\n(Se eles já tiverem vacinas ou pesagens, não exclua.)');
+    }
+
     try {
-      await birthsService.deleteBirth(pendingDelete.id);
+      await birthsService.deleteBirth(pendingDelete.id, deleteCalf);
       setPendingDelete(null);
-      setMessage('Parto excluído com sucesso.');
+      setMessage(deleteCalf ? 'Parto e bezerro(s) excluídos com sucesso.' : 'Parto excluído com sucesso.');
       await loadData();
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : 'Não foi possível excluir.');
