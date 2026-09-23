@@ -88,9 +88,9 @@ function getLotLabel(lots: Lot[], lotId?: string) {
 }
 
 function getLatestInsemination(animalId: string, inseminations: Insemination[]) {
-  return inseminations
-    .filter((insemination) => insemination.animal_id === animalId)
-    .sort((a, b) => b.date.localeCompare(a.date))[0];
+  const animalInsems = inseminations.filter((insemination) => insemination.animal_id === animalId);
+  const activeInsem = animalInsems.filter(i => i.cycle_status !== 'closed').sort((a, b) => b.date.localeCompare(a.date))[0];
+  return activeInsem || animalInsems.sort((a, b) => b.date.localeCompare(a.date))[0];
 }
 
 function getLatestBirth(animalId: string, births: Birth[]) {
@@ -203,10 +203,9 @@ function buildAlerts(
     // Check if cow is pending diagnosis or pending birth
     if (latestInsemination) {
       const latestBirth = getLatestBirth(animal.id, births);
-      // If no birth has happened SINCE the insemination, check alerts
-      if (!latestBirth || latestBirth.birth_date < latestInsemination.date) {
-        const insemination = latestInsemination;
-
+      const insemination = latestInsemination;
+      // If no birth has happened SINCE the insemination, or the cycle is still active, check alerts
+      if (insemination.cycle_status !== 'closed' || !latestBirth || latestBirth.birth_date < latestInsemination.date) {
         if ((insemination.status ?? 'awaiting_diagnosis') === 'awaiting_diagnosis' && insemination.diagnosis_due_date) {
           if (insemination.diagnosis_due_date < today) {
             alerts.push({
