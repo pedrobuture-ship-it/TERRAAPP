@@ -25,3 +25,27 @@ O aplicativo atua como um assistente proativo. Ele analisa os dados registrados 
 
 ### Relatórios
 Toda a base de dados construída no aplicativo pode ser facilmente exportada para arquivos de texto estruturados, ideais para abrir em planilhas financeiras, ou convertida em documentos fixos para impressão e compartilhamento com consultores e veterinários externos.
+
+## Como rodar o projeto localmente
+
+Para rodar o Terra App no seu computador, você precisará do Node.js instalado.
+
+1. Clone o repositório e acesse a pasta do projeto:
+```bash
+git clone https://github.com/pedrobuture-ship-it/terraapp.git
+cd terraapp
+```
+
+2. Instale as dependências:
+```bash
+npm install
+```
+
+3. Inicie o servidor de desenvolvimento:
+```bash
+npm run dev
+```
+
+4. Acesse o aplicativo no navegador, geralmente no endereço `http://localhost:5173`.
+
+> **Nota:** O sistema utiliza o Supabase como backend na nuvem. Você precisará configurar as variáveis de ambiente (`.env`) com a URL e chave do seu projeto Supabase para que a autenticação e sincronização funcionem corretamente.
